@@ -35,13 +35,12 @@ import sys
 import time
 import uuid
 
-from bluezle_dbus import bluez, GattCharacteristic
+from bluezle_dbus import bluez
+from bluezle_dbus.services import UART
 
 
 # Define service and characteristic UUIDs.
 UART_SERVICE_UUID = uuid.UUID('6E400001-B5A3-F393-E0A9-E50E24DCCA9E')
-TX_CHAR_UUID      = uuid.UUID('6E400002-B5A3-F393-E0A9-E50E24DCCA9E')
-RX_CHAR_UUID      = uuid.UUID('6E400003-B5A3-F393-E0A9-E50E24DCCA9E')
 
 # Global variable to hold UART device that is later found.  Needed as global to
 # cleanup later.
@@ -106,33 +105,14 @@ if not found.paired:
     found.pair()
 found.connect()
 
-# Find RX and TX characteristics.
-print 'Finding characteristics...'
-chars = map(GattCharacteristic, bluez.get_objects('org.bluez.GattCharacteristic1'))
-tx_char = filter(lambda x: uuid.UUID(str(x.uuid)) == TX_CHAR_UUID, chars)[0]
-rx_char = filter(lambda x: uuid.UUID(str(x.uuid)) == RX_CHAR_UUID, chars)[0]
+# Create a UART service from the device.
+uart = UART(found)
 
-# Send a message to the device.
-if tx_char is not None:
-    tx_char.write_value('Hello world!\r\n')
+# Send a message to the UART.
+uart.write('Hello world!\r\n')
 
-# Loop waiting for messages to be received and print them.
-def rx_received(iface, changed_props, invalidated_props):
-    # Stop if this event isn't for a GATT characteristic value update.
-    if iface != 'org.bluez.GattCharacteristic1':
-        return
-    if 'Value' not in changed_props:
-        return
-    # Grab the bytes of the message.
-    message = changed_props['Value']
-    # Convert bytes to string and print them out.
-    print 'Received:', ''.join(map(chr, message))
-
-if rx_char is not None:
-    print 'Waiting for messages from device...'
-    rx_char._props.connect_to_signal('PropertiesChanged', rx_received)
-    rx_char.start_notify()
-    # Spin in a loop forever.  The background message thread will receive new
-    # messages and print them with the rx_received callback.
-    while True:
-        time.sleep(1)
+# Loop reciving data from the UART:
+print 'Waiting for messages from device...'
+while True:
+    data = uart.read()
+    print 'Received:', data

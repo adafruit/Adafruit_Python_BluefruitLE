@@ -48,7 +48,6 @@ def initialize():
                             'org.freedesktop.DBus.ObjectManager')
     # Spin up a background thread to run the GLib main loop that's required to
     # receive async DBus messages in the background.
-    print 'Start thread...'
     _MAINLOOP_THREAD = threading.Thread(target=_mainloop_thread)
     _MAINLOOP_THREAD.daemon = True
     _MAINLOOP_THREAD.start()
