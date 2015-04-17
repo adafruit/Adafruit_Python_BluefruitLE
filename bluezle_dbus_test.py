@@ -33,18 +33,14 @@
 import atexit
 import sys
 import time
-import uuid
 
 from bluezle_dbus import bluez
 from bluezle_dbus.services import UART
 
 
-# Define service and characteristic UUIDs.
-UART_SERVICE_UUID = uuid.UUID('6E400001-B5A3-F393-E0A9-E50E24DCCA9E')
-
 # Global variable to hold UART device that is later found.  Needed as global to
 # cleanup later.
-found = None
+device = None
 
 
 # Initialize communication with bluez.  MUST be called before any other bluez
@@ -57,8 +53,8 @@ bluez.initialize()
 # Make sure any connected device is disconnected and the adapter stops scanning
 # before exiting.
 def cleanup():
-    if found is not None:
-        found.disconnect()
+    if device is not None:
+        device.disconnect()
     # Stop any bluetooth adapters that are scanning.
     for adapter in bluez.list_adapters():
         if adapter.discovering:
@@ -75,38 +71,31 @@ if not adapter.powered:
     adapter.powered = True
 
 # Check if UART devices are already paired and unpair all of them.
-for device in bluez.find_devices(UART_SERVICE_UUID):
-    if device.paired:
-        print 'Unpairing device {0}...'.format(device.name)
-        device.unpair()
+for old_device in UART.find_devices():
+    if old_device.paired:
+        print 'Unpairing device {0}...'.format(old_device.name)
+        old_device.unpair()
 
 # Start scan for devices.
 print 'Scanning...'
 adapter.start_scan()
 
-# Spend up to 30 seconds searching for a UART device.
-i = 0
-while True:
-    # Look for a device that advertises the UART service and break out of the
-    # loop when found.
-    found = bluez.find_device(UART_SERVICE_UUID)
-    if found is not None:
-        print 'Found device {0}...'.format(found.name)
-        break
-    # Continue up to 30 seconds waiting for a device and then time out.
-    i += 1
-    if i >= 30:
-        raise RuntimeError('Timeout waiting for UART device!')
-    time.sleep(1)
+# Spend up to 30 seconds waiting for a UART device to be found.
+device = UART.find_device(timeout_sec=30)
+if device is not None:
+    print 'Found device {0}!'.format(device.name)
+else:
+    print 'Failed to find UART device!'
+    sys.exit(-1)
 
 # Pair with device and connect to receive all the GATT services.
-if not found.paired:
+if not device.paired:
     print 'Pairing...'
-    found.pair()
-found.connect()
+    device.pair()
+device.connect()
 
 # Create a UART service from the device.
-uart = UART(found)
+uart = UART(device)
 
 # Send a message to the UART.
 uart.write('Hello world!\r\n')
@@ -115,4 +104,7 @@ uart.write('Hello world!\r\n')
 print 'Waiting for messages from device...'
 while True:
     data = uart.read()
+    # Can optionally call read with a timeout in seconds.  If the timeout is
+    # exceeded before receiving data then an exception is thrown!
+    #data = uart.read(3)  # Wait 3 seconds for data
     print 'Received:', data

@@ -4,6 +4,7 @@
 # natural way to interact with it.
 # Author: Tony DiCola
 import threading
+import time
 import uuid
 
 import dbus
@@ -87,17 +88,28 @@ def find_devices(service_uuid):
     return found
 
 
-def find_device(service_uuid):
+def find_device(service_uuid, timeout_sec=0):
     """Return the first device found that advertises the specified service UUID.
-    service_uuid should be a Python uuid.UUID object.  If no device is found
-    then None is returned.
+    service_uuid should be a Python uuid.UUID object.  Will wait up to timeout_sec
+    seconds for the device to be found, and if the timeout is zero then it will
+    not wait at all and immediately return a result.  When no device is found
+    a value of None is returned.
     """
-    # Just call find_devices and grab the first result if any are found.
-    found = find_devices(service_uuid)
-    if len(found) > 0:
-        return found[0]
-    else:
-        return None
+    i = 0
+    while True:
+        # Call find_devices and grab the first result if any are found.
+        found = find_devices(service_uuid)
+        if len(found) > 0:
+            return found[0]
+        # If no device is found increase attempt count and check if exceeded
+        # the timeout.
+        i += 1
+        if i >= timeout_sec:
+            # Exceeded timeout, return no device.
+            return None
+        # Otherwise sleep for a second and try again.
+        time.sleep(1)
+
 
 
 def list_adapters():

@@ -39,6 +39,21 @@ class UART(object):
         self._rx._props.connect_to_signal('PropertiesChanged', self._rx_received)
         self._rx.start_notify()
 
+    @classmethod
+    def find_device(cls, timeout_sec=30):
+        """Find the first available device that supports the UART service and
+        return it, or None if no device is found.  Will wait for up to timeout_sec
+        seconds to find the device.
+        """
+        return bluez.find_device(UART_SERVICE_UUID, timeout_sec)
+
+    @classmethod
+    def find_devices(cls):
+        """Find all the available devices that support the UART service and
+        returns a list of them.  Does not poll and will return immediately.
+        """
+        return bluez.find_devices(UART_SERVICE_UUID)
+
     def _rx_received(self, iface, changed_props, invalidated_props):
         # Stop if this event isn't for a GATT characteristic value update.
         if iface != 'org.bluez.GattCharacteristic1':
@@ -56,8 +71,15 @@ class UART(object):
         """Write a string of data to the UART device."""
         self._tx.write_value(data)
 
-    def read(self):
+    def read(self, timeout_sec=None):
         """Block until data is available to read from the UART.  Will return a
-        string of data that has been received.
+        string of data that has been received.  Timeout_sec specifies how many
+        seconds to wait for data to be available and will block forever if None
+        (the default).  If the timeout is exceeded and no data is found then
+        an exception is thrown.
         """
-        return self._queue.get()
+        try:
+            return self._queue.get(timeout=timeout_sec)
+        except Queue.Empty:
+            # Timeout exceeded, throw exception.
+            raise RuntimeError('Exceeded timeout waiting for UART data!')
