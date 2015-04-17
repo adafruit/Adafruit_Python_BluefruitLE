@@ -7,6 +7,7 @@ import uuid
 from .. import bluez
 from ..gatt import GattCharacteristic
 
+
 # Define service and characteristic UUIDs.
 UART_SERVICE_UUID = uuid.UUID('6E400001-B5A3-F393-E0A9-E50E24DCCA9E')
 TX_CHAR_UUID      = uuid.UUID('6E400002-B5A3-F393-E0A9-E50E24DCCA9E')
@@ -76,10 +77,10 @@ class UART(object):
         string of data that has been received.  Timeout_sec specifies how many
         seconds to wait for data to be available and will block forever if None
         (the default).  If the timeout is exceeded and no data is found then
-        an exception is thrown.
+        None is returned.
         """
         try:
             return self._queue.get(timeout=timeout_sec)
         except Queue.Empty:
-            # Timeout exceeded, throw exception.
-            raise RuntimeError('Exceeded timeout waiting for UART data!')
+            # Timeout exceeded, return None to signify no data received.
+            return None

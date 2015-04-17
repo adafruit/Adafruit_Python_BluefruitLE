@@ -103,8 +103,12 @@ uart.write('Hello world!\r\n')
 # Loop reciving data from the UART:
 print 'Waiting for messages from device...'
 while True:
-    data = uart.read()
+    # Block indefinitely waiting for data to be received.
+    #data = uart.read()
     # Can optionally call read with a timeout in seconds.  If the timeout is
-    # exceeded before receiving data then an exception is thrown!
-    #data = uart.read(3)  # Wait 3 seconds for data
+    # exceeded before receiving data then None is returned.
+    data = uart.read(3)  # Wait 3 seconds for data
+    if data is None:
+       print 'Exceeded timeout waiting for data!'
+       continue
     print 'Received:', data
