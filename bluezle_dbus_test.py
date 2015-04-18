@@ -34,13 +34,8 @@ import atexit
 import sys
 import time
 
-from bluezle_dbus import bluez
-from bluezle_dbus.services import UART
-
-
-# Global variable to hold UART device that is later found.  Needed as global to
-# cleanup later.
-device = None
+from Adafruit_BluetoothLE.bluezle_dbus import bluez
+from Adafruit_BluetoothLE.services import UART
 
 
 # Initialize communication with bluez.  MUST be called before any other bluez
@@ -53,8 +48,10 @@ bluez.initialize()
 # Make sure any connected device is disconnected and the adapter stops scanning
 # before exiting.
 def cleanup():
-    if device is not None:
-        device.disconnect()
+    # Disconnect any connected device.
+    for device in bluez.list_devices():
+        if device.connected:
+            device.disconnect()
     # Stop any bluetooth adapters that are scanning.
     for adapter in bluez.list_adapters():
         if adapter.discovering:
@@ -70,11 +67,9 @@ if not adapter.powered:
     print 'Powering on adapter...'
     adapter.powered = True
 
-# Check if UART devices are already paired and unpair all of them.
-for old_device in UART.find_devices():
-    if old_device.paired:
-        print 'Unpairing device {0}...'.format(old_device.name)
-        old_device.unpair()
+# Remove any devices that are known before scanning.
+for device in bluez.list_devices():
+    device.remove()
 
 # Start scan for devices.
 print 'Scanning...'
@@ -88,13 +83,23 @@ else:
     print 'Failed to find UART device!'
     sys.exit(-1)
 
-# Pair with device and connect to receive all the GATT services.
-if not device.paired:
-    print 'Pairing...'
-    device.pair()
+adapter.stop_scan()
+
+time.sleep(1)
+
+# Connect to device.
+print 'Connecting...'
 device.connect()
 
+# Wait for services to discover.
+print 'Waiting for service discovery...'
+#if not bluez.discover_services(device, [UART_SERVICE_UUID], [TX_CHAR_UUID, RX_CHAR_UUID]):
+if not UART.discover_services(device, timeout_sec=60):
+    print 'Failed to discover UART service data!'
+    sys.exit(-1)
+
 # Create a UART service from the device.
+print 'Creating UART device and sending message...'
 uart = UART(device)
 
 # Send a message to the UART.

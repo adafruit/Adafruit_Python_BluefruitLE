@@ -15,13 +15,21 @@ class GattService(BluezObject):
         """
         super(GattService, self).__init__(dbus_obj, 'org.bluez.GattService1')
 
-    uuid = BluezObject.readonly_property('UUID')
+    # @property
+    # def characteristics(self):
+    #     """Return list of GATT characteristics that have been discovered for this
+    #     service.
+    #     """
+    #     return map(GattCharacteristic, bluez.get_objects('org.bluez.GattCharacteristic1',
+    #                                                      self._object.object_path))
+
+    uuid = BluezObject.readonly_property('UUID', converter=BluezObject.to_uuid)
 
     primary = BluezObject.readonly_property('Primary')
 
     device = BluezObject.readonly_property('Device')
 
-    characteristics = BluezObject.readonly_property('Characteristics')
+    characteristics = BluezObject.readonly_property('Characteristics', converter=BluezObject.to_uuids)
 
 
 class GattCharacteristic(BluezObject):
@@ -46,7 +54,15 @@ class GattCharacteristic(BluezObject):
     def stop_notify(self):
         self._characteristic.StopNotify()
 
-    uuid = BluezObject.readonly_property('UUID')
+    # @property
+    # def descriptors(self):
+    #     """Return list of GATT descriptors that have been discovered for this
+    #     characteristic.
+    #     """
+    #     return map(GattDescriptor, bluez.get_objects('org.bluez.GattDescriptor1',
+    #                                                      self._object.object_path))
+
+    uuid = BluezObject.readonly_property('UUID', converter=BluezObject.to_uuid)
 
     service = BluezObject.readonly_property('Service')
 
@@ -56,7 +72,7 @@ class GattCharacteristic(BluezObject):
 
     flags = BluezObject.readonly_property('Flags')
 
-    descriptors = BluezObject.readonly_property('Descriptors')
+    descriptors = BluezObject.readonly_property('Descriptors', converter=BluezObject.to_uuids)
 
 
 class GattDescriptor(BluezObject):
@@ -75,7 +91,7 @@ class GattDescriptor(BluezObject):
     def write_value(self, value):
         self._descriptor.WriteValue(value)
 
-    uuid = BluezObject.readonly_property('UUID')
+    uuid = BluezObject.readonly_property('UUID', converter=BluezObject.to_uuid)
 
     characteristic = BluezObject.readonly_property('Characteristic')
 

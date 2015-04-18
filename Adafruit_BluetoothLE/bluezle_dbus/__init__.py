@@ -3,3 +3,4 @@ import bluez
 from adapter import *
 from device import *
 from gatt import *
+from servicebase import *

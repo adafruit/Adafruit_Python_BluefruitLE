@@ -42,7 +42,7 @@ class Adapter(BluezObject):
 
     discovering = BluezObject.readonly_property('Discovering')
 
-    uuids = BluezObject.readonly_property('UUIDs')
+    uuids = BluezObject.readonly_property('UUIDs', converter=BluezObject.to_uuids)
 
     modalias = BluezObject.readonly_property('Modalias')
 

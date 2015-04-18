@@ -5,6 +5,7 @@ import dbus
 
 from adapter import Adapter
 from bluezobject import BluezObject
+from gatt import GattService
 
 
 class Device(BluezObject):
@@ -23,15 +24,10 @@ class Device(BluezObject):
     def disconnect(self):
         self._device.Disconnect()
 
-    def pair(self):
-        self._device.Pair()
-
-    def cancel_pairing(self):
-        self._device.CancelPairing()
-
-    def unpair(self):
-        # Remove device from any connected adapter and unpair it.
-        # First get the adapter.
+    def remove(self):
+        # Remove device from any connected adapter and remove/unpair it.
+        # Must be done at the adapter level so get the adapter for this device
+        # and then remove the device.
         adapter = Adapter(bluez._BUS.get_object('org.bluez', self.adapter))
         adapter._adapter.RemoveDevice(self._device.object_path)
 
@@ -45,7 +41,7 @@ class Device(BluezObject):
 
     appearance = BluezObject.readonly_property('Appearance')
 
-    uuids = BluezObject.readonly_property('UUIDs')
+    uuids = BluezObject.readonly_property('UUIDs', converter=BluezObject.to_uuids)
 
     paired = BluezObject.readonly_property('Paired')
 
