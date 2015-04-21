@@ -35,7 +35,7 @@ import sys
 import time
 
 from Adafruit_BluetoothLE.bluezle_dbus import bluez
-from Adafruit_BluetoothLE.services import UART
+from Adafruit_BluetoothLE.services import UART, DeviceInformation
 
 
 # Initialize communication with bluez.  MUST be called before any other bluez
@@ -93,10 +93,22 @@ device.connect()
 
 # Wait for services to discover.
 print 'Waiting for service discovery...'
-#if not bluez.discover_services(device, [UART_SERVICE_UUID], [TX_CHAR_UUID, RX_CHAR_UUID]):
 if not UART.discover_services(device, timeout_sec=60):
     print 'Failed to discover UART service data!'
     sys.exit(-1)
+#if not DeviceInformation.discover_services(device, timeout_sec=60):
+#    print 'Failed to discover device information service data!'
+#    sys.exit(-1)
+
+#device._device.ConnectProfile('0000180A-0000-1000-8000-00805F9B34FB')
+
+## Get the device information service and print out some device info.
+#dis = DeviceInformation(device)
+#print 'Manufacturer:', dis.manufacturer
+#print 'Model:', dis.model
+#print 'HW Revision:', dis.hw_revision
+#print 'SW Revision:', dis.sw_revision
+#print 'FW Revision:', dis.fw_revision
 
 # Create a UART service from the device.
 print 'Creating UART device and sending message...'

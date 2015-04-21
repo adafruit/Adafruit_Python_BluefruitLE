@@ -4,7 +4,7 @@
 import Queue
 import uuid
 
-from ..bluezle_dbus import bluez, GattCharacteristic, ServiceBase
+from ..bluezle_dbus import ServiceBase
 
 
 # Define service and characteristic UUIDs.
