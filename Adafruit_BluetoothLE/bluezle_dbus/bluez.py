@@ -55,19 +55,24 @@ def initialize():
     _MAINLOOP_THREAD.start()
 
 
-def get_objects(interface, path='/org/bluez'):
+def get_objects(interface, parent_path='/org/bluez'):
     """Return a list of all bluez DBus objects that implement the requested 
     interface name and are under the specified path.  The default is to search
     devices under the root of all bluez objects.
     """
     # Iterate through all the objects in bluez's DBus hierarchy and return any
     # that implement the requested interface under the specified path.
-    path = path.lower()
+    parent_path = parent_path.lower()
     objects = []
     for opath, interfaces in _BLUEZ.GetManagedObjects().iteritems():
-        if interface in interfaces.keys() and opath.lower().startswith(path):
+        if interface in interfaces.keys() and opath.lower().startswith(parent_path):
             objects.append(_BUS.get_object('org.bluez', opath))
     return objects
+
+def get_objects_by_path(paths):
+    """Return a list of all bluez DBus objects from the provided list of paths.
+    """
+    return map(lambda x: _BUS.get_object('org.bluez', x), paths)
 
 
 def find_devices(service_uuids):

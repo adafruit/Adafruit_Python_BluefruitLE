@@ -2,6 +2,7 @@
 # service implementations from specific BLE implementations.
 # Author: Tony DiCola
 import bluez
+from gatt import GattService, GattCharacteristic
 
 
 class ServiceBase(object):

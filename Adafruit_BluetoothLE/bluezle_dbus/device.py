@@ -4,6 +4,7 @@
 import dbus
 
 from adapter import Adapter
+import bluez
 from bluezobject import BluezObject
 from gatt import GattService
 
@@ -30,6 +31,23 @@ class Device(BluezObject):
         # and then remove the device.
         adapter = Adapter(bluez._BUS.get_object('org.bluez', self.adapter))
         adapter._adapter.RemoveDevice(self._device.object_path)
+
+    @property
+    def services(self):
+        """Return a list of GattService objects that have been discovered for
+        this device.
+        """
+        return map(GattService, bluez.get_objects('org.bluez.GattService1',
+                                                  self._device.object_path))
+
+    def find_service(self, uuid):
+        """Return the first child service found that has the specified
+        UUID.  Will return None if no service that matches is found.
+        """
+        for service in self.services:
+            if service.uuid == uuid:
+                return service
+        return None
 
     address = BluezObject.readonly_property('Address')
 

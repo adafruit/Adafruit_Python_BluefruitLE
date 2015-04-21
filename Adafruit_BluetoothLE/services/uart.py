@@ -23,29 +23,21 @@ class UART(ServiceBase):
 
     def __init__(self, device):
         """Initialize UART from provided bluez device."""
+        # Find the UART service and characteristics associated with the device.
+        self._uart = device.find_service(UART_SERVICE_UUID)
+        self._tx = self._uart.find_characteristic(TX_CHAR_UUID)
+        self._rx = self._uart.find_characteristic(RX_CHAR_UUID)
+        # Use a queue to pass data received from the RX property change back to
+        # the main thread in a thread-safe way.
         self._queue = Queue.Queue()
-        # Find the RX and TX characteristics.
-        chars = map(GattCharacteristic,
-                    bluez.get_objects('org.bluez.GattCharacteristic1',
-                                      device.object_path))
-        self._tx = filter(lambda x: x.uuid == TX_CHAR_UUID, chars)[0]
-        self._rx = filter(lambda x: x.uuid == RX_CHAR_UUID, chars)[0]
-        # Subscribe to rx characteristic changes to receive data.
-        self._rx._props.connect_to_signal('PropertiesChanged', self._rx_received)
-        self._rx.start_notify()
+        # Subscribe to RX characteristic changes to receive data.
+        self._rx.start_notify(self._rx_received)
 
-    def _rx_received(self, iface, changed_props, invalidated_props):
-        # Stop if this event isn't for a GATT characteristic value update.
-        if iface != 'org.bluez.GattCharacteristic1':
-            return
-        if 'Value' not in changed_props:
-            return
-        # Grab the bytes of the message.
-        message = changed_props['Value']
-        # Convert bytes to string and put them in the queue to be available for
-        # reading on the main program thread (this callback is called on the
-        # GLib main loop so it's dangerous to do much other processing).
-        self._queue.put(''.join(map(chr, message)))
+    def _rx_received(self, data):
+        # Callback that's called when data is received on the RX characteristic.
+        # Just throw the new data in the queue so the read function can access
+        # it on the main thread.
+        self._queue.put(''.join(map(chr, data)))
 
     def write(self, data):
         """Write a string of data to the UART device."""
