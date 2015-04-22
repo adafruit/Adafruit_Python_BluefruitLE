@@ -15,12 +15,12 @@ class ServiceBase(object):
     """
 
     @classmethod
-    def find_device(cls, timeout_sec=30):
+    def find_device(cls, **kwargs):
         """Find the first available device that supports this service and return
         it, or None if no device is found.  Will wait for up to timeout_sec
         seconds to find the device.
         """
-        return bluez.find_device(cls.ADVERTISED, timeout_sec)
+        return bluez.find_device(cls.ADVERTISED, **kwargs)
 
     @classmethod
     def find_devices(cls):

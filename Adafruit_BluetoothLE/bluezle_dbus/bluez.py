@@ -102,17 +102,21 @@ def find_devices(service_uuids):
     return found
 
 
-def find_device(service_uuids, timeout_sec=0):
+def find_device(service_uuids, timeout_sec=0, name=None):
     """Return the first device that advertises the specified service UUIDs.
     service_uuids should be a list of Python uuid.UUID objects.  Will wait up to
     timeout_sec seconds for the device to be found, and if the timeout is zero 
     then it will not wait at all and immediately return a result.  When no device 
-    is found a value of None is returned.
+    is found a value of None is returned.  Optional name parameter will look
+    just for a device with the specified name (and associated service UUIDs).
     """
     i = 0
     while True:
         # Call find_devices and grab the first result if any are found.
         found = find_devices(service_uuids)
+        # Filter out anything without the expected name when required.
+        if name is not None:
+            found = filter(lambda x: x.name == name, found)
         if len(found) > 0:
             return found[0]
         # If no device is found increase attempt count and check if exceeded
