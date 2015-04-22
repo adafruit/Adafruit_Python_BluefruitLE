@@ -30,7 +30,6 @@
 #       /usr/local/bin/bluetoothd --experimental &
 #     Reboot and bluetoothd should be running.
 #
-import atexit
 import sys
 import time
 
@@ -41,14 +40,18 @@ from Adafruit_BluetoothLE.services import UART, DeviceInformation
 # Make sure any connected device is disconnected and the adapter stops scanning
 # before exiting.
 def cleanup():
-    # Disconnect any connected device.
-    for device in bluez.list_devices():
-        if device.connected:
-            device.disconnect()
+    print 'Cleaning up...'
     # Stop any bluetooth adapters that are scanning.
     for adapter in bluez.list_adapters():
         if adapter.discovering:
             adapter.stop_scan()
+    # Disconnect any connected device.
+    for device in bluez.list_devices():
+        if device.connected:
+            device.disconnect()
+    # Remove any devices that are known.
+    for device in bluez.list_devices():
+        device.remove()
 
 def main():
     # Initialize communication with bluez.  MUST be called before any other bluez
@@ -58,6 +61,9 @@ def main():
     # Useful debugging information to print the tree of bluez DBus objects.
     #bluez._print_tree()
 
+    # Cleanup any currently connected devices.
+    cleanup()
+
     # Pick the first bluetooth adapter found.
     adapter = bluez.get_default_adapter()
     print 'Using adapter {0}...'.format(adapter.name)
@@ -66,10 +72,6 @@ def main():
     if not adapter.powered:
         print 'Powering on adapter...'
         adapter.powered = True
-
-    # Remove any devices that are known before scanning.
-    for device in bluez.list_devices():
-        device.remove()
 
     # Start scan for devices.
     print 'Scanning...'
@@ -133,8 +135,11 @@ def main():
            continue
         print 'Received:', data
 
+
 if __name__=='__main__':
     try:
         main()
+    except KeyboardInterrupt:
+        print 'Shutting down (takes a few seconds)...'
     finally:
         cleanup()

@@ -5,6 +5,7 @@
 # Author: Tony DiCola
 from collections import Counter
 import threading
+import thread
 import time
 
 import dbus
@@ -24,9 +25,12 @@ _MAINLOOP_THREAD = None
 
 
 def _mainloop_thread():
-    # Spin up a GLib main loop.  Meant to be run as background thread.
-    mainloop = GObject.MainLoop()
-    mainloop.run()
+    try:
+        # Spin up a GLib main loop.  Meant to be run as background thread.
+        mainloop = GObject.MainLoop()
+        mainloop.run()
+    except KeyboardInterrupt as ex:
+        thread.interrupt_main()
 
 
 def initialize():
