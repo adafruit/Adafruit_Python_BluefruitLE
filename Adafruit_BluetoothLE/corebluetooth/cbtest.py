@@ -20,7 +20,10 @@ def main():
 
     print 'Searching for UART device...'
     cb.start_scan()
-    device = cb.find_device([UART_SERVICE_UUID], timeout_sec=30)
+    # Search for the device by the services it advertises (UART service):
+    device = cb.find_device(serivce_uuids=[UART_SERVICE_UUID], timeout_sec=30)
+    # OR search for the device by name:
+    #device = cb.find_device(name='UART', timeout_sec=30)
     cb.stop_scan()
     if device is None:
         raise RuntimeError('Failed to find UART device!')
@@ -48,7 +51,8 @@ def main():
         rx.start_notify(received)
 
         # Now just wait for 30 seconds to receive data.
-        time.sleep(25)
+        print 'Waiting 30 seconds to receive data...'
+        time.sleep(30)
     finally:
         # Make sure device is disconnected on exit.
         device.disconnect()
