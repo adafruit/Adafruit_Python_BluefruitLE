@@ -35,6 +35,9 @@ def main():
         print 'Discovering services...'
         device.discover_services(timeout_sec=30)
 
+        # Wait a few seconds to finish descriptor discovery for now.
+        time.sleep(2)
+
         # Find the UART service and its characteristics.
         uart = device.find_service(UART_SERVICE_UUID)
         rx   = uart.find_characteristic(RX_CHAR_UUID)
