@@ -115,7 +115,6 @@ class Device(object):
 
     def __init__(self, peripheral):
         self._peripheral = peripheral          # Objective-C CBPeripheral instance.
-        self._name = None                      # Device name, found from advertisement.
         self._uuids = []                       # List of service UUIDs for this device.
         self._connected = threading.Event()    # Event to signal device connected.
         self._discovered = threading.Event()   # Event to signal service discovery complete.
@@ -128,8 +127,6 @@ class Device(object):
         # name from advertisement data.
         if 'kCBAdvDataServiceUUIDs' in advertised:
             self._uuids = map(cbuuid_to_uuid, advertised['kCBAdvDataServiceUUIDs'])
-        elif 'kCBAdvDataLocalName' in advertised:
-            self._name = advertised['kCBAdvDataLocalName']
 
     def _services_discovered(self, services):
         # List of services was discovered, save it and kick off discovery of 
@@ -201,7 +198,7 @@ class Device(object):
     @property
     def name(self):
         """Name of the device."""
-        return self._name
+        return self._peripheral.name()
 
     @property
     def connected(self):
@@ -303,20 +300,24 @@ def initialize():
     _CENTRAL_MANAGER.initWithDelegate_queue_options_(_CENTRAL_DELEGATE, None, None)
 
 
+def _raise_error(exec_info):
+    # Rethrow exception with its original stack trace following advice from:
+    # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
+    raise exec_info[1], None, exec_info[2]
+
 def _user_thread_main(target):
     # Main entry point for the thread that will run user's code.
     try:
         # Run user's code.
         return_code = target()
-        # Call exit on the main thread when user code has finished.
+        # Assume good result (0 return code) if none is returned.
         if return_code is None:
             return_code = 0
+        # Call exit on the main thread when user code has finished.
         AppHelper.callAfter(lambda: sys.exit(return_code))
     except Exception as ex:
-        # Something went wrong.  Fail with an error and raise the exception.
-        AppHelper.callAfter(lambda: sys.exit(-1))
-        raise ex
-
+        # Something went wrong.  Raise the exception on the main thread to exit.
+        AppHelper.callAfter(_raise_error, sys.exc_info())
 
 def run_mainloop_with(target):
     """Start the application's main loop to process asyncronous BLE events, and
@@ -369,9 +370,10 @@ def find_devices(service_uuids=[], name=None):
     # Filter to just the devices that have the requested service UUID/name.
     found = []
     for device in devices:
-        if name is not None and device.name == name:
-            # Check if the name matches and add the device.
-            found.append(device)
+        if name is not None:
+            if device.name == name:
+                # Check if the name matches and add the device.
+                found.append(device)
         else:
             # Check if the advertised UUIDs have at least the expected UUIDs.
             actual = Counter(device.uuids)

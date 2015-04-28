@@ -56,11 +56,18 @@ def main():
 
         # Find the UART service and its characteristics.
         uart = device.find_service(UART_SERVICE_UUID)
-        rx   = uart.find_characteristic(RX_CHAR_UUID)
-        tx   = uart.find_characteristic(TX_CHAR_UUID)
+        if uart is None:
+            raise RuntimeError('Failed to find the expected UART service.  Is the right device connected?')
+        rx = uart.find_characteristic(RX_CHAR_UUID)
+        if rx is None:
+            raise RuntimeError('Failed to find the expected RX characteristic.  Is the right device connected?')
+        tx = uart.find_characteristic(TX_CHAR_UUID)
+        if tx is None:
+            raise RuntimeError('Failed to find the expected TX characteristic.  Is the right device connected?')
 
         # Write a string to the TX characteristic.
-        tx.write_value('Hello world!\r\n')
+        print 'Sending message...'
+        tx.write_value('Hello World!\r\n')
 
         # Wait a few seconds to make sure the data sends before exiting.  Then
         # exit with a 0 status code.
