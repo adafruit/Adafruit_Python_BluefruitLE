@@ -1,3 +1,4 @@
+import logging
 import sys
 import time
 import uuid
@@ -15,6 +16,9 @@ RX_CHAR_UUID      = uuid.UUID('6E400003-B5A3-F393-E0A9-E50E24DCCA9E')
 # background).  You can return an int at any point and it will cause the program
 # to exit with that status code.
 def main():
+    if '-v' in sys.argv:
+        logging.basicConfig(level=logging.DEBUG)
+
     # Make sure internal BLE radio for machine is turned on and ready.  There is
     # an optional timeout in seconds (default is 30 seconds).
     print 'Powering up adapter...'

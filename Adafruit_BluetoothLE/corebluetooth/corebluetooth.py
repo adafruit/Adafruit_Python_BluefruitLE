@@ -1,4 +1,5 @@
 from collections import Counter
+import logging
 import Queue
 import signal
 import sys
@@ -21,6 +22,8 @@ _USER_THREAD = None                # Thread running user code in the background.
 _DEVICES = {}                      # Master dict of known devices.
 _DEVICES_LOCK = threading.Lock()   # Lock to synchronize access to master device list across threads.
 _POWERED_ON = threading.Event()    # Event to notify when adapter is powered on.
+
+logger = logging.getLogger(__name__)
 
 
 def cbuuid_to_uuid(cbuuid):
@@ -217,6 +220,8 @@ class _BLEDelegate(object):
         _POWERED_ON.set()
  
     def centralManager_didDiscoverPeripheral_advertisementData_RSSI_(self, manager, peripheral, data, rssi):
+        # Log name of device found while scanning.
+        logger.debug('Saw device advertised with name: {0}'.format(peripheral.name()))
         # Device was found while scanning, or updated advertising data was
         # discovered.  Make sure the device is added to the global list of
         # devices and then update its advertisement state.
