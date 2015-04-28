@@ -307,9 +307,11 @@ def _user_thread_main(target):
     # Main entry point for the thread that will run user's code.
     try:
         # Run user's code.
-        target()
+        return_code = target()
         # Call exit on the main thread when user code has finished.
-        AppHelper.callAfter(lambda: sys.exit(0))
+        if return_code is None:
+            return_code = 0
+        AppHelper.callAfter(lambda: sys.exit(return_code))
     except Exception as ex:
         # Something went wrong.  Fail with an error and raise the exception.
         AppHelper.callAfter(lambda: sys.exit(-1))

@@ -31,13 +31,17 @@ def main():
     print 'Searching for UART device...'
     cb.start_scan()
     # Search for the device by the services it advertises (UART service):
-    device = cb.find_device(serivce_uuids=[UART_SERVICE_UUID], timeout_sec=30)
+    device = cb.find_device(service_uuids=[UART_SERVICE_UUID], timeout_sec=30)
     # OR search for the device by name:
     #device = cb.find_device(name='UART', timeout_sec=30)
     cb.stop_scan()
     if device is None:
+        # Couldn't find UART device, raise an exception.
         raise RuntimeError('Failed to find UART device!')
 
+    # Connect to device.  If this times out an exception is thrown and a -1 status
+    # code is returned.  (in general for all future calls if a timeout is exceeded
+    # then an exception is thrown and a -1 status returned).
     print 'Connecting to device...'
     device.connect(timeout_sec=30)
 
@@ -58,16 +62,11 @@ def main():
         # Write a string to the TX characteristic.
         tx.write_value('Hello world!\r\n')
 
-        # Function to receive RX characteristic changes.
-        def received(data):
-            print 'Received:', data
-
-        # Turn on notification of RX characteristics using the callback above.
-        rx.start_notify(received)
-
-        # Now just wait for 30 seconds to receive data.
-        print 'Waiting 30 seconds to receive data...'
-        time.sleep(30)
+        # Wait a few seconds to make sure the data sends before exiting.  Then
+        # exit with a 0 status code.
+        time.sleep(2)
+        return 0
+        
     finally:
         # Make sure device is disconnected on exit.
         device.disconnect()
