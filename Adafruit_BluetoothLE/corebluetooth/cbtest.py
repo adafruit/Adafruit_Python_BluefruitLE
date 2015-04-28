@@ -31,7 +31,7 @@ def main():
     print 'Searching for UART device...'
     cb.start_scan()
     # Search for the device by the services it advertises (UART service):
-    device = cb.find_device(serivce_uuids=[UART_SERVICE_UUID], timeout_sec=30)
+    device = cb.find_device(service_uuids=[UART_SERVICE_UUID], timeout_sec=30)
     # OR search for the device by name:
     #device = cb.find_device(name='UART', timeout_sec=30)
     cb.stop_scan()
