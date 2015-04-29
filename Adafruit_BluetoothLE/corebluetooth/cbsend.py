@@ -69,6 +69,13 @@ def main():
         if tx is None:
             raise RuntimeError('Failed to find the expected TX characteristic.  Is the right device connected?')
 
+        # Function to receive RX characteristic changes.
+        def received(data):
+            print 'Received:', data
+
+        # Turn on notification of RX characteristics using the callback above.
+        rx.start_notify(received)
+
         # Write a string to the TX characteristic.
         print 'Sending message...'
         tx.write_value('Hello World!\r\n')
