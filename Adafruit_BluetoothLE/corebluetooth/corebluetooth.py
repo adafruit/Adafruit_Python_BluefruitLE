@@ -1,8 +1,10 @@
 from collections import Counter
 import logging
+import os
 import Queue
 import signal
 import sys
+import subprocess
 import time
 import threading
 import uuid
@@ -11,8 +13,16 @@ import objc
 from PyObjCTools import AppHelper
 
 
+# Load IOBluetooth functions for controlling bluetooth power state.
+objc.loadBundleFunctions(
+    objc.loadBundle("IOBluetooth", globals(), bundle_path=objc.pathForFramework(u'/System/Library/Frameworks/IOBluetooth.framework')), 
+    globals(), 
+    [('IOBluetoothPreferenceGetControllerPowerState', 'oI'),('IOBluetoothPreferenceSetControllerPowerState','vI')]
+)
+
+# Load CoreBluetooth bundle.
 objc.loadBundle("CoreBluetooth", globals(),
-            bundle_path=objc.pathForFramework(u'/System/Library/Frameworks/IOBluetooth.framework/Versions/A/Frameworks/CoreBluetooth.framework'))
+    bundle_path=objc.pathForFramework(u'/System/Library/Frameworks/IOBluetooth.framework/Versions/A/Frameworks/CoreBluetooth.framework'))
 
 
 # Global state for BLE devices and other metadata.
@@ -310,6 +320,7 @@ def _raise_error(exec_info):
     # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
     raise exec_info[1], None, exec_info[2]
 
+
 def _user_thread_main(target):
     # Main entry point for the thread that will run user's code.
     try:
@@ -323,6 +334,7 @@ def _user_thread_main(target):
     except Exception as ex:
         # Something went wrong.  Raise the exception on the main thread to exit.
         AppHelper.callAfter(_raise_error, sys.exc_info())
+
 
 def run_mainloop_with(target):
     """Start the application's main loop to process asyncronous BLE events, and
@@ -416,3 +428,26 @@ def start_scan():
 def stop_scan():
     """Stop scanning for BLE devices."""
     _CENTRAL_MANAGER.stopScan()
+
+
+def clear_bluetooth_cache():
+    """Clear the internal bluetooth device cache.  This is useful if a device
+    changes its state like name and it can't be detected with the new state
+    anymore.  WARNING: This will delete some files underneath the running user's
+    ~/Library/Preferences/ folder!
+
+    See this Stackoverflow question for information on what the function does:
+    http://stackoverflow.com/questions/20553957/how-can-i-clear-the-corebluetooth-cache-on-macos
+    """
+    # Turn off bluetooth.
+    IOBluetoothPreferenceSetControllerPowerState(0)
+    time.sleep(2)
+    # Delete cache files and suppress any stdout/err output.
+    with open(os.devnull, 'w') as devnull:
+        subprocess.call('rm ~/Library/Preferences/com.apple.Bluetooth.plist', 
+                        shell=True, stdout=devnull, stderr=subprocess.STDOUT)
+        subprocess.call('rm ~/Library/Preferences/ByHost/com.apple.Bluetooth.*.plist',
+                        shell=True, stdout=devnull, stderr=subprocess.STDOUT)
+    # Turn on bluetooth.
+    IOBluetoothPreferenceSetControllerPowerState(1)
+    time.sleep(2)

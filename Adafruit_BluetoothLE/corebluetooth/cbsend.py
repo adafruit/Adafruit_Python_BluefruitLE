@@ -87,5 +87,9 @@ def main():
 # event loop and run the main function above in a background thread.  When the
 # main function stops runnings the program will exit.
 print 'Start'
+# First clear the bluetooth cache to prevent issues with devices that changed
+# their name, services, etc.
+cb.clear_bluetooth_cache()
+# Now initialize bluetooth and run the main loop.
 cb.initialize()
 cb.run_mainloop_with(main)
