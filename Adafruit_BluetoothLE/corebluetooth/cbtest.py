@@ -52,8 +52,14 @@ def main():
 
         # Find the UART service and its characteristics.
         uart = device.find_service(UART_SERVICE_UUID)
-        rx   = uart.find_characteristic(RX_CHAR_UUID)
-        tx   = uart.find_characteristic(TX_CHAR_UUID)
+        if uart is None:
+            raise RuntimeError('Failed to find the expected UART service.  Is the right device connected?')
+        rx = uart.find_characteristic(RX_CHAR_UUID)
+        if rx is None:
+            raise RuntimeError('Failed to find the expected RX characteristic.  Is the right device connected?')
+        tx = uart.find_characteristic(TX_CHAR_UUID)
+        if tx is None:
+            raise RuntimeError('Failed to find the expected TX characteristic.  Is the right device connected?')
 
         # Write a string to the TX characteristic.
         tx.write_value('Hello world!\r\n')
@@ -77,5 +83,9 @@ def main():
 # event loop and run the main function above in a background thread.  When the
 # main function stops runnings the program will exit.
 print 'Start'
+# First clear the bluetooth cache to prevent issues with devices that changed
+# their name, services, etc.
+cb.clear_bluetooth_cache()
+# Now initialize bluetooth and run the main loop.
 cb.initialize()
 cb.run_mainloop_with(main)
