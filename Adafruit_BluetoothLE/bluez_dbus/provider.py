@@ -1,7 +1,5 @@
-# Functions to interact with bluez's DBus APIs.  These functions are module-level
-# as opposed to being inside a class because there is only one global instance
-# of bluez's DBus interface on the system and global module-level functions are a 
-# natural way to interact with it.
+# BLE provider implementation using Linux's bluez library over its DBus
+# interface.
 # Author: Tony DiCola
 from collections import Counter
 import sys

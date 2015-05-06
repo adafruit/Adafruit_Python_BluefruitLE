@@ -1,0 +1,293 @@
+# BLE provider implementation using Mac OSX's CoreBluetooth library.
+# Author: Tony DiCola
+import logging
+import os
+import sys
+import subprocess
+import threading
+
+import objc
+from PyObjCTools import AppHelper
+
+from ..interfaces import Provider
+from ..platform import get_provider
+
+from .adapter import CoreBluetoothAdapter
+from .metadata import CoreBluetoothMetadata
+from .objc_helpers import nsuuid_to_uuid
+
+
+# Load CoreBluetooth bundle.
+objc.loadBundle("CoreBluetooth", globals(),
+    bundle_path=objc.pathForFramework(u'/System/Library/Frameworks/IOBluetooth.framework/Versions/A/Frameworks/CoreBluetooth.framework'))
+
+
+# Convenience functions to allow other classes to read global metadata lists
+# associated with each CoreBluetooth type.
+def device_list():
+    return get_provider()._devices
+
+
+def service_list():
+    return get_provider()._services
+
+
+def characteristic_list():
+    return get_provider()._characteristics
+
+
+def descriptor_list():
+    return get_provider()._descriptors
+
+
+class CentralDelegate(object):
+    """Internal class to handle asyncronous BLE events from the operating system.
+    """
+
+    def __init__(self):
+        """Create CentralDelegate instance that will receive async BLE events for
+        the CBCentralDelegate interface.
+        """
+        # Note that this class will be used by multiple threads (the main loop
+        # thread that will receive async BLE events, and the secondary thread
+        # that will receive requests from user code) so access to internal state
+        # MUST be thread safe!
+        self._powered_on = threading.Event()
+ 
+    @property
+    def is_powered(self):
+        return self._powered_on.is_set()
+
+    def wait_powered(self, timeout_sec=30):
+        if not self._powered_on.wait(timeout_sec):
+            raise RuntimeError('Timeout exceeded waiting to power on device!')
+
+    def centralManagerDidUpdateState_(self, manager):
+        """Called when the BLE adapter is powered on and ready to scan/connect
+        to devices.
+        """
+        # Fire the powered on event.
+        self._powered_on.set()
+ 
+    def centralManager_didDiscoverPeripheral_advertisementData_RSSI_(self, manager, peripheral, data, rssi):
+        """Called when the BLE adapter found a device while scanning, or has
+        updated advertisement data for a device.
+        """
+        # Log name of device found while scanning.
+        #logger.debug('Saw device advertised with name: {0}'.format(peripheral.name()))
+        # Make sure the device is added to the list of devices and then update 
+        # its advertisement state.
+        device = device_list().get(peripheral)
+        if device is None:
+            device = device_list().add(peripheral, CoreBluetoothDevice(peripheral))
+        device._update_advertised(data)
+ 
+    def centralManager_didConnectPeripheral_(self, manager, peripheral):
+        """Called when a device is connected."""
+        # Setup peripheral delegate and kick off service discovery.  For now just
+        # assume all services need to be discovered.
+        peripheral.setDelegate_(self)
+        peripheral.discoverServices_(None)
+        # Fire connected event for device.
+        device = device_list().get(peripheral)
+        if device is not None:
+            device._connected()
+ 
+    def centralManager_didFailToConnectPeripheral_error_(self, manager, peripheral, error):
+        # Error connecting to devie.  Ignored for now since connected event will
+        # never fire and a timeout will elapse.
+        pass
+ 
+    def centralManager_didDisconnectPeripheral_error_(self, manager, peripheral, error):
+        """Called when a device is disconnected."""
+        # Get the device and remove it from the device list, then fire its
+        # disconnected event.
+        device = device_list().get(peripheral)
+        if device is not None:
+            # Remove all the services, characteristics, and descriptors from the
+            # lists of those items.
+            for service in device.list_services():
+                for char in service.list_characteristics():
+                    for desc in char.list_descriptors():
+                        self._descriptors.remove(desc)
+                    self._characteristics.remove(char)
+                self._services.remove(service)
+            # Fire disconnected event and remove device from device list.
+            device._disconnected()
+            device_list().remove(peripheral)
+
+    def peripheral_didDiscoverServices_(self, peripheral, services):
+        """Called when services are discovered for a device."""
+        # Make sure the discovered services are added to the list of known
+        # services, and kick off characteristic discovery for each one.
+        for service in services:
+            if service_list().get(service) is None:
+                service_list().add(service, CoreBluetoothService(service))
+            # Kick off characteristic discovery for this service.  Just discover
+            # all characteristics for now.
+            self._peripheral.discoverCharacteristics_forService_(None, service)
+ 
+    def peripheral_didDiscoverCharacteristicsForService_error_(self, peripheral, service, error):
+        """Called when characteristics are discovered for a service."""
+        # Stop if there was some kind of error.
+        if error is not None:
+            return
+        # Notify the device about the discovered characteristics.
+        device = device_list().get(peripheral)
+        if device is not None:
+            device._characteristics_discovered(service)
+ 
+    def peripheral_didWriteValueForCharacteristic_error_(self, peripheral, characteristic, error):
+        # Characteristic write succeeded.  Ignored for now.
+        pass
+ 
+    def peripheral_didUpdateNotificationStateForCharacteristic_error_(self, peripheral, characteristic, error):
+        # Characteristic notification state updated.  Ignored for now.
+        pass
+ 
+    def peripheral_didUpdateValueForCharacteristic_error_(self, peripheral, characteristic, error):
+        """Called when characteristic value was read or updated."""
+        # Stop if there was some kind of error.
+        if error is not None:
+            return
+        # Notify the device about the updated characteristic value.
+        device = device_list().get(peripheral)
+        if device is not None:
+            device._characteristic_changed(characteristic)
+
+    def peripheral_didUpdateValueForDescriptor_error_(self, peripheral, descriptor, error):
+        """Called when descriptor value was read or updated."""
+        # Stop if there was some kind of error.
+        if error is not None:
+            return
+        # Notify the device about the updated descriptor value.
+        device = device_list().get(peripheral)
+        if device is not None:
+            device._descriptor_changed(descriptor)
+
+    def peripheral_didReadRSSI_error_(self, peripheral, rssi, error):
+        """Called when a new RSSI value for the peripheral is available."""
+        # Note this appears to be completely undocumented at the time of this
+        # writing.  Can see more details at:
+        #  http://stackoverflow.com/questions/25952218/ios-8-corebluetooth-deprecated-rssi-methods
+        # Stop if there was some kind of error.
+        if error is not None:
+            return
+        # Notify the device about the updated RSSI value.
+        device = device_list().get(peripheral)
+        if device is not None:
+            device._rssi_changed(rssi)
+
+
+class CoreBluetoothProvider(Provider):
+    """BLE provider implementation using the CoreBluetooth framework."""
+
+    def __init__(self):
+        # Global state for BLE devices and other metadata.
+        self._central_delegate = CentralDelegate()
+        self._central_manager = None
+        self._user_thread = None
+        self._powered_on = threading.Event()
+        self._adapter = CoreBluetoothAdapter()
+        # Keep an internal cache of the devices, services, characteristics, and
+        # descriptors that are known to the system.  Extra metadata can be stored
+        # with each item, like callbacks and events to fire when asyncronous BLE
+        # events occur.
+        self._devices = CoreBluetoothMetadata()
+        self._services = CoreBluetoothMetadata()
+        self._characteristics = CoreBluetoothMetadata()
+        self._descriptors = CoreBluetoothMetadata()
+
+    def initialize(self):
+        """Initialize the BLE provider.  Must be called once before any other
+        calls are made to the provider.
+        """
+        # Setup the central manager and its delegate.
+        self._central_manager = CBCentralManager.alloc()
+        self._central_manager.initWithDelegate_queue_options_(self._central_delegate, 
+                                                              None, None)
+        # Wait for the central manager to be ready.
+        if not self._powered_on.wait(30):
+            raise RuntimeError('Exceeded timeout waiting for central manager to be ready!')
+
+    def run_mainloop_with(self, target):
+        """Start the OS's main loop to process asyncronous BLE events and then
+        run the specified target function in a background thread.  Target
+        function should be a function that takes no parameters and optionally
+        return an integer response code.  When the target function stops
+        executing or returns with value then the main loop will be stopped and
+        the program will exit with the returned code.
+
+        Note that an OS main loop is required to process asyncronous BLE events
+        and this function is provided as a convenience for writing simple tools
+        and scripts that don't need to be full-blown GUI applications.  If you
+        are writing a GUI application that has a main loop (a GTK glib main loop
+        on Linux, or a Cocoa main loop on OSX) then you don't need to call this
+        function.
+        """
+        # Create background thread to run user code.
+        self._user_thread = threading.Thread(target=self._user_thread_main, 
+                                             args=(target,))
+        self._user_thread.daemon = True
+        self._user_thread.start()
+        # Run main loop.  This call will never return!
+        AppHelper.runConsoleEventLoop()
+
+    def _user_thread_main(target):
+        """Main entry point for the thread that will run user's code."""
+        try:
+            # Run user's code.
+            return_code = target()
+            # Assume good result (0 return code) if none is returned.
+            if return_code is None:
+                return_code = 0
+            # Call exit on the main thread when user code has finished.
+            AppHelper.callAfter(lambda: sys.exit(return_code))
+        except Exception as ex:
+            # Something went wrong.  Raise the exception on the main thread to exit.
+            AppHelper.callAfter(_raise_error, sys.exc_info())
+
+    def _raise_error(exec_info):
+        """Raise an exception from the provided exception info.  Used to cause
+        the main thread to stop with an error.
+        """
+        # Rethrow exception with its original stack trace following advice from:
+        # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
+        raise exec_info[1], None, exec_info[2]
+
+    def list_adapters(self):
+        """Return a list of BLE adapter objects connected to the system."""
+        return [self._adapter]
+
+    def list_devices(self):
+        """Return a list of BLE devices known to the system."""
+        return self._devices.list()
+
+    def clear_cached_data(self):
+        """Clear the internal bluetooth device cache.  This is useful if a device
+        changes its state like name and it can't be detected with the new state
+        anymore.  WARNING: This will delete some files underneath the running user's
+        ~/Library/Preferences/ folder!
+
+        See this Stackoverflow question for information on what the function does:
+        http://stackoverflow.com/questions/20553957/how-can-i-clear-the-corebluetooth-cache-on-macos
+        """
+        # Turn off bluetooth.
+        self._adapter.power_off()
+        # Delete cache files and suppress any stdout/err output.
+        with open(os.devnull, 'w') as devnull:
+            subprocess.call('rm ~/Library/Preferences/com.apple.Bluetooth.plist', 
+                            shell=True, stdout=devnull, stderr=subprocess.STDOUT)
+            subprocess.call('rm ~/Library/Preferences/ByHost/com.apple.Bluetooth.*.plist',
+                            shell=True, stdout=devnull, stderr=subprocess.STDOUT)
+        # Turn on bluetooth.
+        self._adapter.power_on()
+
+# def list_connected_devices(service_uuids):
+#     """Return list of all devices currently connected that have the specified
+#     service UUIDs.
+#     """
+#     # Convert list of service UUIDs to CBUUID types.
+#     cbuuids = map(uuid_to_cbuuid, service_uuids)
+#     # Return list of connected devices with specified services.
+#     return map(Device, _CENTRAL_MANAGER.retrieveConnectedPeripheralsWithServices_(cbuuids))
