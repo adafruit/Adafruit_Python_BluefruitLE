@@ -1,1 +1,1 @@
-import platform
+from platform import get_provider

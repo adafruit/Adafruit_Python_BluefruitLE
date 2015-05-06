@@ -4,7 +4,7 @@
 import Queue
 import uuid
 
-from ..bluezle_dbus import ServiceBase
+from .servicebase import ServiceBase
 
 
 # Define service and characteristic UUIDs.
@@ -37,7 +37,7 @@ class UART(ServiceBase):
         # Callback that's called when data is received on the RX characteristic.
         # Just throw the new data in the queue so the read function can access
         # it on the main thread.
-        self._queue.put(''.join(map(chr, data)))
+        self._queue.put(data)
 
     def write(self, data):
         """Write a string of data to the UART device."""

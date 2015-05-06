@@ -3,7 +3,7 @@
 # Author: Tony DiCola
 import uuid
 
-from ..bluezle_dbus import bluez, ServiceBase, GattService
+from .servicebase import ServiceBase
 
 
 # Define service and characteristic UUIDs.  These UUIDs are taken from the spec:
@@ -34,10 +34,6 @@ class DeviceInformation(ServiceBase):
     def __init__(self, device):
         """Initialize device information from provided bluez device."""
         # Find the DIS service and characteristics associated with the device.
-        for service in device.services:
-            print 'Service:', service.uuid
-        for service in map(GattService, bluez.get_objects('org.bluez.GattService1')):
-            print 'Service2:', service.uuid
         self._dis = device.find_service(DIS_SERVICE_UUID)
         self._manufacturer = self._dis.find_characteristic(MANUFACTURER_CHAR_UUID)
         self._model = self._dis.find_characteristic(MODEL_CHAR_UUID)

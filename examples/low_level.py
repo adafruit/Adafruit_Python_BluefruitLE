@@ -1,5 +1,8 @@
-# Example of interaction with a BLE UART device that has an RX and TX
-# characteristic for receiving and sending data.
+# Example of low level interaction with a BLE UART device that has an RX and TX
+# characteristic for receiving and sending data.  This doesn't use any service
+# implementation and instead just manipulates the services and characteristics
+# on a device.  See the uart_service.py example for a simpler UART service
+# example that uses a high level service implementation.
 # Author: Tony DiCola
 import logging
 import time
@@ -17,7 +20,7 @@ TX_CHAR_UUID      = uuid.UUID('6E400002-B5A3-F393-E0A9-E50E24DCCA9E')
 RX_CHAR_UUID      = uuid.UUID('6E400003-B5A3-F393-E0A9-E50E24DCCA9E')
 
 # Get the BLE provider for the current platform.
-ble = Adafruit_BluetoothLE.platform.get_provider()
+ble = Adafruit_BluetoothLE.get_provider()
 
 
 # Main function run in a background thread so that the main application thread 
@@ -36,7 +39,6 @@ def main():
     # starting from a fresh state.
     print 'Disconnecting any connected UART devices...'
     ble.disconnect_devices([UART_SERVICE_UUID])
-    #TODO: Disconnect won't work on bluez?
 
     # Scan for UART devices, either just by UART service type or by name (or
     # not shown but you can scan for both UART service type and name).
