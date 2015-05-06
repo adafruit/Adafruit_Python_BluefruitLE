@@ -112,23 +112,39 @@ class BluezProvider(Provider):
             # bluez's DBus hierarchy.
             adapter.RemoveDevice(device._device.object_path)
 
-    def wait_until_ready(self, timeout_sec=30):
-        """Wait for the BLE system to become ready.  Should be called as the
-        very first thing in the main code before other BLE calls.  Will throw
-        an exception if the timeout exceeds without the BLE system becoming
-        ready.
+    def disconnect_devices(self, service_uuids=[]):
+        """Disconnect any connected devices that have the specified list of
+        service UUIDs.  The default is an empty list which means all devices
+        are disconnected.
         """
-        # Check the GLib main loop until it's running.
-        start = time.time()
-        while True:
-            if self._gobject_mainloop is not None and self._gobject_mainloop.is_running():
-                # Main loop is running, we should be ready to make bluez DBus calls.
-                return
-            if time.time()-start >= timeout_sec:
-                # Timeout exceeded!
-                raise RuntimeError('Timeout exceeded waiting for BLE system to be ready!')
-            # Be nice and give up time to other processes.
-            time.sleep(0)
+        service_uuids = Counter(service_uuids)
+        for device in self.list_devices():
+            # Skip devices that aren't connected.
+            if not device.is_connected:
+                continue
+            device_uuids = Counter(map(lambda x: x.uuid, device.list_services()))
+            if device_uuids >= service_uuids:
+                # Found a device that has at least the requested services, now
+                # disconnect from it.
+                device.disconnect()
+        
+    # def wait_until_ready(self, timeout_sec=30):
+    #     """Wait for the BLE system to become ready.  Should be called as the
+    #     very first thing in the main code before other BLE calls.  Will throw
+    #     an exception if the timeout exceeds without the BLE system becoming
+    #     ready.
+    #     """
+    #     # Check the GLib main loop until it's running.
+    #     start = time.time()
+    #     while True:
+    #         if self._gobject_mainloop is not None and self._gobject_mainloop.is_running():
+    #             # Main loop is running, we should be ready to make bluez DBus calls.
+    #             return
+    #         if time.time()-start >= timeout_sec:
+    #             # Timeout exceeded!
+    #             raise RuntimeError('Timeout exceeded waiting for BLE system to be ready!')
+    #         # Be nice and give up time to other processes.
+    #         time.sleep(0)
 
     def list_adapters(self):
         """Return a list of BLE adapter objects connected to the system."""

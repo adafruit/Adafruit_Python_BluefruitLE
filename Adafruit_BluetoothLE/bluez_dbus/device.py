@@ -11,6 +11,7 @@ import dbus
 from ..interfaces import Device
 from ..platform import get_provider
 
+from .adapter import _INTERFACE as _ADAPTER_INTERFACE
 from .gatt import BluezGattService, BluezGattCharacteristic, _SERVICE_INTERFACE, _CHARACTERISTIC_INTERFACE
 
 
@@ -58,7 +59,16 @@ class BluezDevice(Device):
         """
         self._disconnected.clear()
         self._device.Disconnect()
-        if not self._connected.wait(timeout_sec):
+        if self._disconnected.wait(timeout_sec):
+            # Remove this device to work around an issue where bluez will change
+            # the uuid list for a disconnected device.  
+            # First get the adapter associated with the device.
+            adapter = dbus.Interface(get_provider()._bus.get_object('org.bluez', self._adapter),
+                                     _ADAPTER_INTERFACE)
+            # Now call RemoveDevice on the adapter to remove the device from
+            # bluez's DBus hierarchy.
+            adapter.RemoveDevice(self._device.object_path)
+        else:
             raise RuntimeError('Exceeded timeout waiting to disconnect from device!')
 
     def list_services(self):
