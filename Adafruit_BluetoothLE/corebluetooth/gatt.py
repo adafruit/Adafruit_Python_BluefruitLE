@@ -1,9 +1,18 @@
 # Python objects to represent the CoreBluetooth GATT objects.
 # Author: Tony DiCola
+import threading
+
+import objc
+
 from ..interfaces import GattService, GattCharacteristic, GattDescriptor
 
 from .objc_helpers import cbuuid_to_uuid
 from .provider import device_list, characteristic_list, descriptor_list
+
+
+# Load CoreBluetooth bundle.
+objc.loadBundle("CoreBluetooth", globals(),
+    bundle_path=objc.pathForFramework(u'/System/Library/Frameworks/IOBluetooth.framework/Versions/A/Frameworks/CoreBluetooth.framework'))
 
 
 class CoreBluetoothGattService(GattService):
@@ -75,7 +84,7 @@ class CoreBluetoothGattCharacteristic(GattCharacteristic):
         characteristic value.
         """
         # Tell the device what callback to use for changes to this characteristic.
-        self._device._characteristic_notify(self._characteristic, on_change)
+        self._device._notify_characteristic(self._characteristic, on_change)
         # Turn on notifications of characteristic changes.
         self._device._peripheral.setNotifyValue_forCharacteristic_(True,
             self._characteristic)

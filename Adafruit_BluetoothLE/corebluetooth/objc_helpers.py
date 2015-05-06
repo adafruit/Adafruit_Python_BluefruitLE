@@ -2,6 +2,13 @@
 # Author: Tony DiCola
 import uuid
 
+import objc
+
+
+# Load CoreBluetooth bundle.
+objc.loadBundle("CoreBluetooth", globals(),
+    bundle_path=objc.pathForFramework(u'/System/Library/Frameworks/IOBluetooth.framework/Versions/A/Frameworks/CoreBluetooth.framework'))
+
 
 def cbuuid_to_uuid(cbuuid):
     """Convert Objective-C CBUUID type to native Python UUID type."""

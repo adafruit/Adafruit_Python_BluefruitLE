@@ -57,6 +57,13 @@ class Provider(object):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def disconnect_devices(self, service_uuids):
+        """Disconnect any connected devices that have any of the specified
+        service UUIDs.
+        """
+        raise NotImplementedError
+
     def get_default_adapter(self):
         """Return the first BLE adapter found, or None if no adapters are
         available.

@@ -1,6 +1,7 @@
 # Base class for a BLE network adapter.  Each OS supported by the library should
 # inherit from this class and implement the abstract methods.
 # Author: Tony DiCola
+import threading
 import time
 
 import objc
@@ -28,6 +29,19 @@ class CoreBluetoothAdapter(Adapter):
         DBus object.
         """
         self._is_scanning = False
+        self._powered_on = threading.Event()
+        self._powered_off = threading.Event()
+
+    def _state_changed(self, state):
+        """Called when the power state changes."""
+        # Handle when powered on.
+        if state == 5:  # 5 = 
+            self._powered_off.clear()
+            self._powered_on.set()
+        # Handle when powered off.
+        elif state == 4:
+            self._powered_on.clear()
+            self._powered_off.set()
 
     @property
     def name(self):
@@ -35,12 +49,12 @@ class CoreBluetoothAdapter(Adapter):
         # Mac OSX has no oncept of BLE adapters so just return a fixed value.
         return "Default Adapter"
 
-    def start_scan(self, timeout_sec):
+    def start_scan(self, timeout_sec=30):
         """Start scanning for BLE devices."""
         get_provider()._central_manager.scanForPeripheralsWithServices_options_(None, None)
         self._is_scanning = True
 
-    def stop_scan(self, timeout_sec):
+    def stop_scan(self, timeout_sec=30):
         """Stop scanning for BLE devices."""
         get_provider()._central_manager.stopScan()
         self._is_scanning = False
@@ -52,17 +66,21 @@ class CoreBluetoothAdapter(Adapter):
         """
         return self._is_scanning
 
-    def power_on(self):
+    def power_on(self, timeout_sec=30):
         """Power on Bluetooth."""
-        # Turn off bluetooth.
-        IOBluetoothPreferenceSetControllerPowerState(0)
-        time.sleep(2)
-
-    def power_off(self):
-        """Power off Bluetooth."""
-        # Turn on bluetooth.
+        # Turn on bluetooth and wait for powered on event to be set.
+        self._powered_on.clear()
         IOBluetoothPreferenceSetControllerPowerState(1)
-        time.sleep(2)
+        if not self._powered_on.wait(timeout_sec):
+            raise RuntimeError('Exceeded timeout waiting for adapter to power on!')
+
+    def power_off(self, timeout_sec=30):
+        """Power off Bluetooth."""
+        # Turn off bluetooth.
+        self._powered_off.clear()
+        IOBluetoothPreferenceSetControllerPowerState(0)
+        if not self._powered_off.wait(timeout_sec):
+            raise RuntimeError('Exceeded timeout waiting for adapter to power off!')
 
     @property
     def is_powered(self):

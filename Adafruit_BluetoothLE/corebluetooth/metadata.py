@@ -55,10 +55,10 @@ class CoreBluetoothMetadata(object):
         """
         with self._lock:
             if cbobject not in self._metadata:
-                self._metadata[cbobject] = item
+                self._metadata[cbobject] = metadata
             return self._metadata[cbobject]
 
-    def remove(self, cboject):
+    def remove(self, cbobject):
         """Remove any metadata associated with the provided CoreBluetooth object.
         """
         with self._lock:
