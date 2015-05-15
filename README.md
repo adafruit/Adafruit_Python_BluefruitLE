@@ -7,7 +7,9 @@ This library provides a Python wrapper for BLE **Central Mode**, meaning it can 
 ## Bluez Installation (Linux)
 
 On Linux (like with a Raspberry Pi) you'll need to compile and install the latest version of Bluez, version 5.30,
-to gain access to the Bluetooth LE API it exposes.  To do this open a command terminal and run the following
+to gain access to the Bluetooth LE API it exposes.  **Warning:** Be careful about installing a later version of Bluez on top of an existing install if you use a Linux desktop OS like Ubuntu, Debian, etc.  You might cause an issue with your Bluez installation which could break other parts of the OS that depend on it!  A better option is to move to a later version of the OS that has a properly packaged Bluez 5.30 installation package.
+
+To install bluez open a command terminal and run the following
 commands:
 ```
 sudo apt-get update
