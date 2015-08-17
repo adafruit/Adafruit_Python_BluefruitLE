@@ -8,7 +8,7 @@ import logging
 import time
 import uuid
 
-import Adafruit_BluetoothLE
+import Adafruit_BluefruitLE
 
 
 # Enable debug output.
@@ -20,7 +20,7 @@ TX_CHAR_UUID      = uuid.UUID('6E400002-B5A3-F393-E0A9-E50E24DCCA9E')
 RX_CHAR_UUID      = uuid.UUID('6E400003-B5A3-F393-E0A9-E50E24DCCA9E')
 
 # Get the BLE provider for the current platform.
-ble = Adafruit_BluetoothLE.get_provider()
+ble = Adafruit_BluefruitLE.get_provider()
 
 
 # Main function implements the program logic so it can run in a background

@@ -1,12 +1,12 @@
 # Example of interaction with a BLE UART device using a UART service
 # implementation.
 # Author: Tony DiCola
-import Adafruit_BluetoothLE
-from Adafruit_BluetoothLE.services import UART
+import Adafruit_BluefruitLE
+from Adafruit_BluefruitLE.services import UART
 
 
 # Get the BLE provider for the current platform.
-ble = Adafruit_BluetoothLE.get_provider()
+ble = Adafruit_BluefruitLE.get_provider()
 
 
 # Main function implements the program logic so it can run in a background

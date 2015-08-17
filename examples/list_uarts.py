@@ -2,12 +2,12 @@
 # Author: Tony DiCola
 import time
 
-import Adafruit_BluetoothLE
-from Adafruit_BluetoothLE.services import UART
+import Adafruit_BluefruitLE
+from Adafruit_BluefruitLE.services import UART
 
 
 # Get the BLE provider for the current platform.
-ble = Adafruit_BluetoothLE.get_provider()
+ble = Adafruit_BluefruitLE.get_provider()
 
 
 # Main function implements the program logic so it can run in a background
@@ -24,7 +24,7 @@ def main():
     try:
         # Start scanning with the bluetooth adapter.
         adapter.start_scan()
-        print('Searching for UART device...')
+        print('Searching for UART devices...')
         print('Press Ctrl-C to quit.')
         # Enter a loop and print out whenever a new UART device is found.
         known_uarts = set()
