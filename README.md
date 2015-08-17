@@ -1,13 +1,15 @@
-# Adafruit Python BluetoothLE
+# Adafruit Python BluefruitLE
 
-Python library to simplify access to Bluetooth low energy devices and services on Linux (using bluez) and Mac OSX (using CoreBluetooth).
+Python library to simplify access to Bluefruit LE (Bluetooth low energy) devices and services on Linux (using bluez) and Mac OSX (using CoreBluetooth).  Allows code to read and write with the Bluefruit LE UART or other services.
 
 This library provides a Python wrapper for BLE **Central Mode**, meaning it can initiate connections and data exchanges with other BLE Peripherals.  It does not allow you to emulate a BLE Peripheral via Python, or provide Python-based access to BLE peripherals connected to your system.
 
 ## Bluez Installation (Linux)
 
-On Linux (like with a Raspberry Pi) you'll need to compile and install the latest version of Bluez, version 5.30,
-to gain access to the Bluetooth LE API it exposes.  **Warning:** Be careful about installing a later version of Bluez on top of an existing install if you use a Linux desktop OS like Ubuntu, Debian, etc.  You might cause an issue with your Bluez installation which could break other parts of the OS that depend on it!  A better option is to move to a later version of the OS that has a properly packaged Bluez 5.30 installation package.
+On Linux (like with a Raspberry Pi) you'll need to compile and install the latest version of Bluez, version 5.33,
+to gain access to the Bluetooth LE API it exposes.  
+
+**Warning:** Be careful about installing a later version of Bluez on top of an existing install if you use a Linux desktop OS like Ubuntu, Debian, etc.  You might cause an issue with your Bluez installation which could break other parts of the OS that depend on it!  A better option is to move to a later version of the OS that has a properly packaged Bluez 5.30 installation package.
 
 To install bluez open a command terminal and run the following
 commands:
