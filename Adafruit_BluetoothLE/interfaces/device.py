@@ -72,3 +72,17 @@ class Device(object):
             if service.uuid == uuid:
                 return service
         return None
+
+    def __eq__(self, other):
+        """Test if this device is the same as the provided device."""
+        return self.id == other.id
+
+    def __ne__(self, other):
+        """Test if this device is not the same as the provided device."""
+        return self.id != other.id
+
+    def __hash__(self):
+        """Hash function implementation that allows device instances to be put
+        inside dictionaries and other containers.
+        """
+        return hash(self.id)

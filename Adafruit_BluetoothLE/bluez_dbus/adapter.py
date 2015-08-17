@@ -5,6 +5,7 @@ import threading
 
 import dbus
 
+from ..config import TIMEOUT_SEC
 from ..interfaces import Adapter
 
 
@@ -42,14 +43,14 @@ class BluezAdapter(Adapter):
         """Return the name of this BLE network adapter."""
         return self._props.Get(_INTERFACE, 'Name')
 
-    def start_scan(self, timeout_sec=30):
+    def start_scan(self, timeout_sec=TIMEOUT_SEC):
         """Start scanning for BLE devices with this adapter."""
         self._scan_started.clear()
         self._adapter.StartDiscovery()
         if not self._scan_started.wait(timeout_sec):
             raise RuntimeError('Exceeded timeout waiting for adapter to start scanning!')
 
-    def stop_scan(self, timeout_sec=30):
+    def stop_scan(self, timeout_sec=TIMEOUT_SEC):
         """Stop scanning for BLE devices with this adapter."""
         self._scan_stopped.clear()
         self._adapter.StopDiscovery()

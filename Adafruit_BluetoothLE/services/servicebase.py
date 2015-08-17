@@ -1,6 +1,7 @@
 # Bluetooth LE service base class.  Provides functions to simplify and decouple
 # service implementations from specific BLE implementations.
 # Author: Tony DiCola
+from ..config import TIMEOUT_SEC
 from ..platform import get_provider
 
 
@@ -14,7 +15,7 @@ class ServiceBase(object):
     """
 
     @classmethod
-    def find_device(cls, timeout_sec=30):
+    def find_device(cls, timeout_sec=TIMEOUT_SEC):
         """Find the first available device that supports this service and return
         it, or None if no device is found.  Will wait for up to timeout_sec
         seconds to find the device.
@@ -36,9 +37,9 @@ class ServiceBase(object):
         return get_provider().disconnect_devices(service_uuids=cls.ADVERTISED)
 
     @classmethod
-    def discover(cls, device, timeout_sec=30):
+    def discover(cls, device, timeout_sec=TIMEOUT_SEC):
         """Wait until the specified device has discovered the expected services
-        and characteristics for this service.  Should be called once before other 
+        and characteristics for this service.  Should be called once before other
         calls are made on the service.  Returns true if the service has been
         discovered in the specified timeout, or false if not discovered.
         """

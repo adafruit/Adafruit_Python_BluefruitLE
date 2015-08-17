@@ -37,8 +37,8 @@ class BluezProvider(Provider):
         """Initialize bluez DBus communication.  Must be called before any other
         calls are made!
         """
-        # Ensure GLib's threading is initialized to support python threads, and 
-        # make a default mainloop that all DBus objects will inherit.  These 
+        # Ensure GLib's threading is initialized to support python threads, and
+        # make a default mainloop that all DBus objects will inherit.  These
         # commands MUST execute before any other DBus commands!
         GObject.threads_init()
         dbus.mainloop.glib.threads_init()
@@ -46,7 +46,7 @@ class BluezProvider(Provider):
         self._mainloop = dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         # Get the main DBus system bus and root bluez object.
         self._bus = dbus.SystemBus()
-        self._bluez = dbus.Interface(self._bus.get_object('org.bluez', '/'), 
+        self._bluez = dbus.Interface(self._bus.get_object('org.bluez', '/'),
                                      'org.freedesktop.DBus.ObjectManager')
 
     def run_mainloop_with(self, target):
@@ -91,7 +91,7 @@ class BluezProvider(Provider):
             # Signal the main loop to exit.
             self._gobject_mainloop.quit()
         except Exception as ex:
-            # Something went wrong.  Raise the exception on the main thread to 
+            # Something went wrong.  Raise the exception on the main thread to
             # exit.
             self._exception = sys.exc_info()
             self._gobject_mainloop.quit()
@@ -127,7 +127,7 @@ class BluezProvider(Provider):
                 # Found a device that has at least the requested services, now
                 # disconnect from it.
                 device.disconnect()
-        
+
     # def wait_until_ready(self, timeout_sec=30):
     #     """Wait for the BLE system to become ready.  Should be called as the
     #     very first thing in the main code before other BLE calls.  Will throw
@@ -155,11 +155,11 @@ class BluezProvider(Provider):
         return map(BluezDevice, self._get_objects('org.bluez.Device1'))
 
     def _get_objects(self, interface, parent_path='/org/bluez'):
-        """Return a list of all bluez DBus objects that implement the requested 
-        interface name and are under the specified path.  The default is to 
+        """Return a list of all bluez DBus objects that implement the requested
+        interface name and are under the specified path.  The default is to
         search devices under the root of all bluez objects.
         """
-        # Iterate through all the objects in bluez's DBus hierarchy and return 
+        # Iterate through all the objects in bluez's DBus hierarchy and return
         # any that implement the requested interface under the specified path.
         parent_path = parent_path.lower()
         objects = []

@@ -1,5 +1,5 @@
 # Base class for a BLE provider.  Each OS supported by the library should
-# inherit from this class and implement the abstract methods, then update the 
+# inherit from this class and implement the abstract methods, then update the
 # platform.py code to detect when the platform is present and use the
 # implementation of this provider base class.
 # Author: Tony DiCola
@@ -9,6 +9,8 @@
 import abc
 from collections import Counter
 import time
+
+from ..config import TIMEOUT_SEC
 
 
 class Provider(object):
@@ -76,7 +78,7 @@ class Provider(object):
 
     def find_devices(self, service_uuids=[], name=None):
         """Return devices that advertise the specified service UUIDs and/or have
-        the specified name.  Service_uuids should be a list of Python uuid.UUID 
+        the specified name.  Service_uuids should be a list of Python uuid.UUID
         objects and is optional.  Name is a string device name to look for and is
         also optional.  Will not block, instead it returns immediately with a
         list of found devices (which might be empty).
@@ -100,11 +102,11 @@ class Provider(object):
         return found
 
 
-    def find_device(self, service_uuids=[], name=None, timeout_sec=30):
+    def find_device(self, service_uuids=[], name=None, timeout_sec=TIMEOUT_SEC):
         """Return the first device that advertises the specified service UUIDs or
-        has the specified name. Will wait up to timeout_sec seconds for the device 
-        to be found, and if the timeout is zero then it will not wait at all and 
-        immediately return a result.  When no device is found a value of None is 
+        has the specified name. Will wait up to timeout_sec seconds for the device
+        to be found, and if the timeout is zero then it will not wait at all and
+        immediately return a result.  When no device is found a value of None is
         returned.
         """
         start = time.time()
@@ -113,7 +115,7 @@ class Provider(object):
             found = self.find_devices(service_uuids, name)
             if len(found) > 0:
                 return found[0]
-            # No device was found.  Check if the timeout is exceeded and wait to 
+            # No device was found.  Check if the timeout is exceeded and wait to
             # try again.
             if time.time()-start >= timeout_sec:
                 # Failed to find a device within the timeout.

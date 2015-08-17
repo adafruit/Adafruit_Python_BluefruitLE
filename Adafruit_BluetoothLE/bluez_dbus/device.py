@@ -8,6 +8,7 @@ import uuid
 
 import dbus
 
+from ..config import TIMEOUT_SEC
 from ..interfaces import Device
 from ..platform import get_provider
 
@@ -44,7 +45,7 @@ class BluezDevice(Device):
         if 'Connected' in changed_props and changed_props['Connected'] == 0:
             self._disconnected.set()
 
-    def connect(self, timeout_sec=30):
+    def connect(self, timeout_sec=TIMEOUT_SEC):
         """Connect to the device.  If not connected within the specified timeout
         then an exception is thrown.
         """
@@ -53,33 +54,24 @@ class BluezDevice(Device):
         if not self._connected.wait(timeout_sec):
             raise RuntimeError('Exceeded timeout waiting to connect to device!')
 
-    def disconnect(self, timeout_sec=30):
+    def disconnect(self, timeout_sec=TIMEOUT_SEC):
         """Disconnect from the device.  If not disconnected within the specified
         timeout then an exception is thrown.
         """
         self._disconnected.clear()
         self._device.Disconnect()
-        if self._disconnected.wait(timeout_sec):
-            # Remove this device to work around an issue where bluez will change
-            # the uuid list for a disconnected device.  
-            # First get the adapter associated with the device.
-            adapter = dbus.Interface(get_provider()._bus.get_object('org.bluez', self._adapter),
-                                     _ADAPTER_INTERFACE)
-            # Now call RemoveDevice on the adapter to remove the device from
-            # bluez's DBus hierarchy.
-            adapter.RemoveDevice(self._device.object_path)
-        else:
+        if not self._disconnected.wait(timeout_sec):
             raise RuntimeError('Exceeded timeout waiting to disconnect from device!')
 
     def list_services(self):
         """Return a list of GattService objects that have been discovered for
         this device.
         """
-        return map(BluezGattService, 
+        return map(BluezGattService,
                    get_provider()._get_objects(_SERVICE_INTERFACE,
                                                self._device.object_path))
 
-    def discover(self, service_uuids, char_uuids, timeout_sec=30):
+    def discover(self, service_uuids, char_uuids, timeout_sec=TIMEOUT_SEC):
         """Wait up to timeout_sec for the specified services and characteristics
         to be discovered on the device.  If the timeout is exceeded without
         discovering the services and characteristics then an exception is thrown.
@@ -93,8 +85,8 @@ class BluezDevice(Device):
             # Find actual services discovered for the device.
             actual_services = Counter(self.advertised)
             # Find actual characteristics discovered for the device.
-            chars = map(BluezGattCharacteristic, 
-                        get_provider()._get_objects(_CHARACTERISTIC_INTERFACE, 
+            chars = map(BluezGattCharacteristic,
+                        get_provider()._get_objects(_CHARACTERISTIC_INTERFACE,
                                                     self._device.object_path))
             actual_chars = Counter(map(lambda x: x.uuid, chars))
             # Compare actual discovered UUIDs with expected and return true if at
