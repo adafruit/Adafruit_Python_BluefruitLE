@@ -16,6 +16,10 @@ ble = Adafruit_BluefruitLE.get_provider()
 # of automatically though and you just need to provide a main function that uses
 # the BLE provider.
 def main():
+    # Clear any cached data because both bluez and CoreBluetooth have issues with
+    # caching data and it going stale.
+    ble.clear_cached_data()
+
     # Get the first available BLE network adapter and make sure it's powered on.
     adapter = ble.get_default_adapter()
     adapter.power_on()
@@ -48,10 +52,6 @@ def main():
 
 # Initialize the BLE system.  MUST be called before other BLE calls!
 ble.initialize()
-
-# Clear any cached data because both bluez and CoreBluetooth have issues with
-# caching data and it going stale.
-ble.clear_cached_data()
 
 # Start the mainloop to process BLE events, and run the provided function in
 # a background thread.  When the provided main function stops runnings, returns

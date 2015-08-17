@@ -1,23 +1,16 @@
-# Example of low level interaction with a BLE UART device that has an RX and TX
-# characteristic for receiving and sending data.  This doesn't use any service
-# implementation and instead just manipulates the services and characteristics
-# on a device.  See the uart_service.py example for a simpler UART service
-# example that uses a high level service implementation.
+# Example of displaying the device information service (DIS) info for a UART device.
+#
+# !!! NOTE !!!
+#
+# Only works on Mac OSX at this time.  On Linux bluez appears to hide the DIS
+# service entirely. :(
+#
+# !!! NOTE !!!
+#
 # Author: Tony DiCola
-import logging
-import time
-import uuid
-
 import Adafruit_BluefruitLE
+from Adafruit_BluefruitLE.services import UART, DeviceInformation
 
-
-# Enable debug output.
-#logging.basicConfig(level=logging.DEBUG)
-
-# Define service and characteristic UUIDs used by the UART service.
-UART_SERVICE_UUID = uuid.UUID('6E400001-B5A3-F393-E0A9-E50E24DCCA9E')
-TX_CHAR_UUID      = uuid.UUID('6E400002-B5A3-F393-E0A9-E50E24DCCA9E')
-RX_CHAR_UUID      = uuid.UUID('6E400003-B5A3-F393-E0A9-E50E24DCCA9E')
 
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
@@ -41,7 +34,7 @@ def main():
     # Disconnect any currently connected UART devices.  Good for cleaning up and
     # starting from a fresh state.
     print('Disconnecting any connected UART devices...')
-    ble.disconnect_devices([UART_SERVICE_UUID])
+    UART.disconnect_devices()
 
     # Scan for UART devices.
     print('Searching for UART device...')
@@ -49,7 +42,7 @@ def main():
         adapter.start_scan()
         # Search for the first UART device found (will time out after 60 seconds
         # but you can specify an optional timeout_sec parameter to change it).
-        device = ble.find_device(service_uuids=[UART_SERVICE_UUID])
+        device = UART.find_device()
         if device is None:
             raise RuntimeError('Failed to find UART device!')
     finally:
@@ -63,35 +56,25 @@ def main():
     # Once connected do everything else in a try/finally to make sure the device
     # is disconnected when done.
     try:
-        # Wait for service discovery to complete for at least the specified
-        # service and characteristic UUID lists.  Will time out after 60 seconds
-        # (specify timeout_sec parameter to override).
+        # Wait for service discovery to complete for the DIS service.  Will
+        # time out after 60 seconds (specify timeout_sec parameter to override).
         print('Discovering services...')
-        device.discover([UART_SERVICE_UUID], [TX_CHAR_UUID, RX_CHAR_UUID])
+        DeviceInformation.discover(device)
 
-        # Find the UART service and its characteristics.
-        uart = device.find_service(UART_SERVICE_UUID)
-        rx = uart.find_characteristic(RX_CHAR_UUID)
-        tx = uart.find_characteristic(TX_CHAR_UUID)
+        # Once service discovery is complete create an instance of the service
+        # and start interacting with it.
+        dis = DeviceInformation(device)
 
-        # Write a string to the TX characteristic.
-        print('Sending message to device...')
-        tx.write_value('Hello world!\r\n')
-
-        # Function to receive RX characteristic changes.  Note that this will
-        # be called on a different thread so be careful to make sure state that
-        # the function changes is thread safe.  Use Queue or other thread-safe
-        # primitives to send data to other threads.
-        def received(data):
-            print('Received: {0}'.format(data))
-
-        # Turn on notification of RX characteristics using the callback above.
-        print('Subscribing to RX characteristic changes...')
-        rx.start_notify(received)
-
-        # Now just wait for 30 seconds to receive data.
-        print('Waiting 60 seconds to receive data from the device...')
-        time.sleep(60)
+        # Print out the DIS characteristics.
+        print('Manufacturer: {0}'.format(dis.manufacturer))
+        print('Model: {0}'.format(dis.model))
+        print('Serial: {0}'.format(dis.serial))
+        print('Hardware Revision: {0}'.format(dis.hw_revision))
+        print('Software Revision: {0}'.format(dis.sw_revision))
+        print('Firmware Revision: {0}'.format(dis.fw_revision))
+        print('System ID: {0}'.format(dis.system_id))
+        print('Regulatory Cert: {0}'.format(dis.regulatory_cert))
+        print('PnP ID: {0}'.format(dis.pnp_id))
     finally:
         # Make sure device is disconnected on exit.
         device.disconnect()

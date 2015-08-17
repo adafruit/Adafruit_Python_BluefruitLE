@@ -2,6 +2,7 @@
 # Author: Tony DiCola
 import threading
 
+from ..config import TIMEOUT_SEC
 from ..interfaces import Device
 from ..platform import get_provider
 
@@ -33,7 +34,7 @@ class CoreBluetoothDevice(Device):
         # Lookup the CBCentralManager, reduces verbosity of calls.
         return get_provider()._central_manager
 
-    def connect(self, timeout_sec=30):
+    def connect(self, timeout_sec=TIMEOUT_SEC):
         """Connect to the device.  If not connected within the specified timeout
         then an exception is thrown.
         """
@@ -41,7 +42,7 @@ class CoreBluetoothDevice(Device):
         if not self._connected.wait(timeout_sec):
             raise RuntimeError('Failed to connect to device within timeout period!')
 
-    def disconnect(self, timeout_sec=30):
+    def disconnect(self, timeout_sec=TIMEOUT_SEC):
         """Disconnect from the device.  If not disconnected within the specified
         timeout then an exception is thrown.
         """
@@ -125,7 +126,7 @@ class CoreBluetoothDevice(Device):
         """
         return service_list().get_all(self._peripheral.services())
 
-    def discover(self, service_uuids, char_uuids, timeout_sec=30):
+    def discover(self, service_uuids, char_uuids, timeout_sec=TIMEOUT_SEC):
         """Wait up to timeout_sec for the specified services and characteristics
         to be discovered on the device.  If the timeout is exceeded without
         discovering the services and characteristics then an exception is thrown.
@@ -162,7 +163,7 @@ class CoreBluetoothDevice(Device):
         return self._connected.is_set()
 
     @property
-    def rssi(self, timeout_sec=30):
+    def rssi(self, timeout_sec=TIMEOUT_SEC):
         """Return the RSSI signal strength in decibels."""
         # Kick off query to get RSSI, then wait for it to return asyncronously
         # when the _rssi_changed() function is called.

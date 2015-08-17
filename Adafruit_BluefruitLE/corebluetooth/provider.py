@@ -5,6 +5,7 @@ import os
 import sys
 import subprocess
 import threading
+import time
 
 import objc
 from PyObjCTools import AppHelper
@@ -282,15 +283,15 @@ class CoreBluetoothProvider(Provider):
         http://stackoverflow.com/questions/20553957/how-can-i-clear-the-corebluetooth-cache-on-macos
         """
         # Turn off bluetooth.
-        self._adapter.power_off()
+        if self._adapter.is_powered:
+            self._adapter.power_off()
         # Delete cache files and suppress any stdout/err output.
+        print 'Deleting...'
         with open(os.devnull, 'w') as devnull:
             subprocess.call('rm ~/Library/Preferences/com.apple.Bluetooth.plist', 
                             shell=True, stdout=devnull, stderr=subprocess.STDOUT)
             subprocess.call('rm ~/Library/Preferences/ByHost/com.apple.Bluetooth.*.plist',
                             shell=True, stdout=devnull, stderr=subprocess.STDOUT)
-        # Turn on bluetooth.
-        self._adapter.power_on()
 
     def disconnect_devices(self, service_uuids):
         """Disconnect any connected devices that have any of the specified

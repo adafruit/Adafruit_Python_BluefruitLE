@@ -48,36 +48,54 @@ class DeviceInformation(ServiceBase):
     # Expose all the DIS properties as easy to read python object properties.
     @property
     def manufacturer(self):
-        return self._manufacturer.read_value()
+        if self._manufacturer is not None:
+            return self._manufacturer.read_value()
+        return None
 
     @property
     def model(self):
-        return self._model.read_value()
+        if self._model is not None:
+            return self._model.read_value()
+        return None
 
     @property
     def serial(self):
-        return self._serial.read_value()
+        if self._serial is not None:
+            return self._serial.read_value()
+        return None
 
     @property
     def hw_revision(self):
-        return self._hw_revision.read_value()
+        if self._hw_revision is not None:
+            return self._hw_revision.read_value()
+        return None
 
     @property
     def sw_revision(self):
-        return self._sw_revision.read_value()
+        if self._sw_revision is not None:
+            return self._sw_revision.read_value()
+        return None
 
     @property
     def fw_revision(self):
-        return self._fw_revision.read_value()
+        if self._fw_revision is not None:
+            return self._fw_revision.read_value()
+        return None
 
     @property
     def system_id(self):
-        return self._sys_id.read_value()
+        if self._sys_id is not None:
+            return self._sys_id.read_value()
+        return None
 
     @property
     def regulatory_cert(self):
-        return self._reg_cert.read_value()
+        if self._reg_cert is not None:
+            return self._reg_cert.read_value()
+        return None
 
     @property
     def pnp_id(self):
-        return self._pnp_id.read_value()
+        if self._pnp_id is not None:
+            return self._pnp_id.read_value()
+        return None
