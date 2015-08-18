@@ -6,7 +6,7 @@ See more details from the guide here: https://learn.adafruit.com/bluefruit-le-ua
 
 Note this library provides a Python wrapper for BLE **Central Mode**, meaning it can initiate connections and data exchanges with other BLE Peripherals.  It does not allow you to emulate a BLE Peripheral via Python, or provide Python-based access to BLE peripherals connected to your system.
 
-**Be aware that this library is early in development!**  The examples show how to detect and interact with BLE UART devices which are the primary target of the library.  More advanced features like getting advertisement data or interacting with other BLE services might not work or be currently supported.  In particular BLE support for desktop operating systems is still somewhat buggy and spotty with support.
+**Be aware that this library is early in development!**  The examples show how to detect and interact with BLE UART devices which are the primary target of the library.  More advanced features like getting advertisement data or interacting with other BLE services might not work or be currently supported.  In particular BLE support for desktop operating systems is still somewhat buggy and spotty with support.  The library has been developed and primarily test on Python 2.7.x, but if there are issues with Python 3 please raise them so support can be added.
 
 ## Supported Platforms
 
