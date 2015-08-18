@@ -68,8 +68,6 @@ class BluezProvider(Provider):
         self._bus = dbus.SystemBus()
         self._bluez = dbus.Interface(self._bus.get_object('org.bluez', '/'),
                                      'org.freedesktop.DBus.ObjectManager')
-        time.sleep(3)  # Small delay to make sure DBus is ready.  This seems to
-                       # be necessary or else the first call can randomly fail.
 
     def run_mainloop_with(self, target):
         """Start the OS's main loop to process asyncronous BLE events and then
@@ -92,7 +90,11 @@ class BluezProvider(Provider):
         self._user_thread.start()
         # Spin up a GLib main loop in the main thread to process async BLE events.
         self._gobject_mainloop = GObject.MainLoop()
-        self._gobject_mainloop.run()  # Doesn't return until the mainloop ends.
+        try:
+            self._gobject_mainloop.run()  # Doesn't return until the mainloop ends.
+        except KeyboardInterrupt:
+            self._gobject_mainloop.quit()
+            sys.exit(0)
         # Main loop finished.  Check if an exception occured and throw it,
         # otherwise return the status code from the user code.
         if self._exception is not None:
@@ -105,6 +107,13 @@ class BluezProvider(Provider):
     def _user_thread_main(self, target):
         """Main entry point for the thread that will run user's code."""
         try:
+            # Wait for GLib main loop to start running before starting user code.
+            while True:
+                if self._gobject_mainloop is not None and self._gobject_mainloop.is_running():
+                    # Main loop is running, we should be ready to make bluez DBus calls.
+                    break
+                # Main loop isn't running yet, give time back to other threads.
+                time.sleep(0)
             # Run user's code.
             self._return_code = target()
             # Assume good result (0 return code) if none is returned.
