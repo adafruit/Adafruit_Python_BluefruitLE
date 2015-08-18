@@ -65,6 +65,8 @@ sudo python setup.py install
 
 This will install the library so it can be used by any script on your system.
 
+Alternatively you can run `sudo python setup.py develop` to have the library installed in develop mode where changes to the code (like doing a `git pull`) will immediately take effect without a reinstall.
+
 After the library is installed examine the examples folder to see some examples of usage:
 
 *   **list_uarts.py** - This example will print out any BLE UART devices that can be found and is a simple example of searching for devices.
