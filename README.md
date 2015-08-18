@@ -28,8 +28,8 @@ to gain access to the Bluetooth LE API it exposes.  It's important to use this m
 **Warning:** Be careful compiling and installing a later version of BlueZ on top of an existing version if you use
 a Linux desktop OS like Ubuntu, Debian, etc.  You might cause an issue with the new BlueZ version conflicting with
 the distribution's older BlueZ installation and wreaking havoc with package dependencies.  Ubuntu in particular
-can get into a very bad state since core components depend on BlueZ.  Look for a properly package BlueZ 5.33 
-release for your distribution, or install into a virtual machine that can protect your machine desktop from problems.
+can get into a very bad state since core components depend on BlueZ.  Look for a properly packaged BlueZ 5.33 
+release for your distribution, or install into a virtual machine that can protect your desktop machine from conflicts.
 
 The steps below describe how to install BlueZ 5.33 on a Raspberry Pi running its Raspbian operating system.  In a terminal on the Raspberry Pi run:
 ```
