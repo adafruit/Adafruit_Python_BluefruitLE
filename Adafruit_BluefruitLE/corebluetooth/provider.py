@@ -1,5 +1,25 @@
 # BLE provider implementation using Mac OSX's CoreBluetooth library.
 # Author: Tony DiCola
+#
+# Copyright (c) 2015 Adafruit Industries
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 import logging
 import os
 import sys
@@ -56,7 +76,7 @@ class CentralDelegate(object):
         logger.debug('centralManagerDidUpdateState called')
         # Notify adapter about changed central state.
         get_provider()._adapter._state_changed(manager.state())
- 
+
     def centralManager_didDiscoverPeripheral_advertisementData_RSSI_(self, manager, peripheral, data, rssi):
         """Called when the BLE adapter found a device while scanning, or has
         updated advertisement data for a device.
@@ -64,13 +84,13 @@ class CentralDelegate(object):
         logger.debug('centralManager_didDiscoverPeripheral_advertisementData_RSSI called')
         # Log name of device found while scanning.
         #logger.debug('Saw device advertised with name: {0}'.format(peripheral.name()))
-        # Make sure the device is added to the list of devices and then update 
+        # Make sure the device is added to the list of devices and then update
         # its advertisement state.
         device = device_list().get(peripheral)
         if device is None:
             device = device_list().add(peripheral, CoreBluetoothDevice(peripheral))
         device._update_advertised(data)
- 
+
     def centralManager_didConnectPeripheral_(self, manager, peripheral):
         """Called when a device is connected."""
         logger.debug('centralManager_didConnectPeripheral called')
@@ -82,12 +102,12 @@ class CentralDelegate(object):
         device = device_list().get(peripheral)
         if device is not None:
             device._set_connected()
- 
+
     def centralManager_didFailToConnectPeripheral_error_(self, manager, peripheral, error):
         # Error connecting to devie.  Ignored for now since connected event will
         # never fire and a timeout will elapse.
         logger.debug('centralManager_didFailToConnectPeripheral_error called')
- 
+
     def centralManager_didDisconnectPeripheral_error_(self, manager, peripheral, error):
         """Called when a device is disconnected."""
         logger.debug('centralManager_didDisconnectPeripheral called')
@@ -113,7 +133,7 @@ class CentralDelegate(object):
             # Kick off characteristic discovery for this service.  Just discover
             # all characteristics for now.
             peripheral.discoverCharacteristics_forService_(None, service)
- 
+
     def peripheral_didDiscoverCharacteristicsForService_error_(self, peripheral, service, error):
         """Called when characteristics are discovered for a service."""
         logger.debug('peripheral_didDiscoverCharacteristicsForService_error called')
@@ -145,15 +165,15 @@ class CentralDelegate(object):
             # Add to list of known descriptors.
             if descriptor_list().get(desc) is None:
                 descriptor_list().add(desc, CoreBluetoothGattDescriptor(desc))
- 
+
     def peripheral_didWriteValueForCharacteristic_error_(self, peripheral, characteristic, error):
         # Characteristic write succeeded.  Ignored for now.
         logger.debug('peripheral_didWriteValueForCharacteristic_error called')
- 
+
     def peripheral_didUpdateNotificationStateForCharacteristic_error_(self, peripheral, characteristic, error):
         # Characteristic notification state updated.  Ignored for now.
         logger.debug('peripheral_didUpdateNotificationStateForCharacteristic_error called')
- 
+
     def peripheral_didUpdateValueForCharacteristic_error_(self, peripheral, characteristic, error):
         """Called when characteristic value was read or updated."""
         logger.debug('peripheral_didUpdateValueForCharacteristic_error called')
@@ -215,7 +235,7 @@ class CoreBluetoothProvider(Provider):
         """
         # Setup the central manager and its delegate.
         self._central_manager = CBCentralManager.alloc()
-        self._central_manager.initWithDelegate_queue_options_(self._central_delegate, 
+        self._central_manager.initWithDelegate_queue_options_(self._central_delegate,
                                                               None, None)
         # Add any connected devices to list of known devices.
 
@@ -236,7 +256,7 @@ class CoreBluetoothProvider(Provider):
         function.
         """
         # Create background thread to run user code.
-        self._user_thread = threading.Thread(target=self._user_thread_main, 
+        self._user_thread = threading.Thread(target=self._user_thread_main,
                                              args=(target,))
         self._user_thread.daemon = True
         self._user_thread.start()
@@ -288,7 +308,7 @@ class CoreBluetoothProvider(Provider):
         # Delete cache files and suppress any stdout/err output.
         print 'Deleting...'
         with open(os.devnull, 'w') as devnull:
-            subprocess.call('rm ~/Library/Preferences/com.apple.Bluetooth.plist', 
+            subprocess.call('rm ~/Library/Preferences/com.apple.Bluetooth.plist',
                             shell=True, stdout=devnull, stderr=subprocess.STDOUT)
             subprocess.call('rm ~/Library/Preferences/ByHost/com.apple.Bluetooth.*.plist',
                             shell=True, stdout=devnull, stderr=subprocess.STDOUT)

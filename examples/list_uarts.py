@@ -54,6 +54,6 @@ def main():
 ble.initialize()
 
 # Start the mainloop to process BLE events, and run the provided function in
-# a background thread.  When the provided main function stops runnings, returns
+# a background thread.  When the provided main function stops running, returns
 # an integer status code, or throws an error the program will exit.
 ble.run_mainloop_with(main)

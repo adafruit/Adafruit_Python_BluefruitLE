@@ -1,6 +1,26 @@
 # BLE provider implementation using Linux's bluez library over its DBus
 # interface.
 # Author: Tony DiCola
+#
+# Copyright (c) 2015 Adafruit Industries
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 from collections import Counter
 import sys
 import threading
@@ -48,6 +68,8 @@ class BluezProvider(Provider):
         self._bus = dbus.SystemBus()
         self._bluez = dbus.Interface(self._bus.get_object('org.bluez', '/'),
                                      'org.freedesktop.DBus.ObjectManager')
+        time.sleep(3)  # Small delay to make sure DBus is ready.  This seems to
+                       # be necessary or else the first call can randomly fail.
 
     def run_mainloop_with(self, target):
         """Start the OS's main loop to process asyncronous BLE events and then
@@ -127,24 +149,6 @@ class BluezProvider(Provider):
                 # Found a device that has at least the requested services, now
                 # disconnect from it.
                 device.disconnect()
-
-    # def wait_until_ready(self, timeout_sec=30):
-    #     """Wait for the BLE system to become ready.  Should be called as the
-    #     very first thing in the main code before other BLE calls.  Will throw
-    #     an exception if the timeout exceeds without the BLE system becoming
-    #     ready.
-    #     """
-    #     # Check the GLib main loop until it's running.
-    #     start = time.time()
-    #     while True:
-    #         if self._gobject_mainloop is not None and self._gobject_mainloop.is_running():
-    #             # Main loop is running, we should be ready to make bluez DBus calls.
-    #             return
-    #         if time.time()-start >= timeout_sec:
-    #             # Timeout exceeded!
-    #             raise RuntimeError('Timeout exceeded waiting for BLE system to be ready!')
-    #         # Be nice and give up time to other processes.
-    #         time.sleep(0)
 
     def list_adapters(self):
         """Return a list of BLE adapter objects connected to the system."""
