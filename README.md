@@ -17,7 +17,7 @@ The library supports the following platforms:
 
 ### What about Windows support?
 
-The library currently does not support Windows since BLE support is somewhat spotty on that platform.  Windows 7 does not support BLE at all.  Windows 8 does not have [BLE device search and pairing APIs](http://stackoverflow.com/questions/19959261/how-to-scan-for-bluetooth-low-energy-devices-in-windows-8-desktop).
+The library currently does not support Windows since BLE support is limited on that platform.  Windows 7 does not support BLE at all.  Windows 8 does not have [BLE device search and pairing APIs](http://stackoverflow.com/questions/19959261/how-to-scan-for-bluetooth-low-energy-devices-in-windows-8-desktop).
 Windows 10 appears to have a more capable BLE API but it has not yet been invesigated to see if it can be supported by this library yet.
 
 ## Linux & Raspberry Pi Requirements
