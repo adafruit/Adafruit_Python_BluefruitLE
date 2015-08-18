@@ -261,7 +261,11 @@ class CoreBluetoothProvider(Provider):
         self._user_thread.daemon = True
         self._user_thread.start()
         # Run main loop.  This call will never return!
-        AppHelper.runConsoleEventLoop()
+        try:
+            AppHelper.runConsoleEventLoop(installInterrupt=True)
+        except KeyboardInterrupt:
+            AppHelper.stopEventLoop()
+            sys.exit(0)
 
     def _user_thread_main(self, target):
         """Main entry point for the thread that will run user's code."""
@@ -306,7 +310,6 @@ class CoreBluetoothProvider(Provider):
         if self._adapter.is_powered:
             self._adapter.power_off()
         # Delete cache files and suppress any stdout/err output.
-        print 'Deleting...'
         with open(os.devnull, 'w') as devnull:
             subprocess.call('rm ~/Library/Preferences/com.apple.Bluetooth.plist',
                             shell=True, stdout=devnull, stderr=subprocess.STDOUT)

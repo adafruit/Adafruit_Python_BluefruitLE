@@ -1,5 +1,6 @@
 # Search for BLE UART devices and list all that are found.
 # Author: Tony DiCola
+import atexit
 import time
 
 import Adafruit_BluefruitLE
@@ -25,29 +26,29 @@ def main():
     adapter.power_on()
     print('Using adapter: {0}'.format(adapter.name))
 
-    try:
-        # Start scanning with the bluetooth adapter.
-        adapter.start_scan()
-        print('Searching for UART devices...')
-        print('Press Ctrl-C to quit.')
-        # Enter a loop and print out whenever a new UART device is found.
-        known_uarts = set()
-        while True:
-            # Call UART.find_devices to get a list of any UART devices that
-            # have been found.  This call will quickly return results and does
-            # not wait for devices to appear.
-            found = set(UART.find_devices())
-            # Check for new devices that haven't been seen yet and print out
-            # their name and ID (MAC address on Linux, GUID on OSX).
-            new = found - known_uarts
-            for device in new:
-                print('Found UART: {0} [{1}]'.format(device.name, device.id))
-            known_uarts.update(new)
-            # Sleep for a second and see if new devices have appeared.
-            time.sleep(1.0)
-    finally:
-        # Make sure scanning is stopped before exiting.
-        adapter.stop_scan()
+    # Start scanning with the bluetooth adapter.
+    adapter.start_scan()
+    # Use atexit.register to call the adapter stop_scan function before quiting.
+    # This is good practice for calling cleanup code in this main function as
+    # a try/finally block might not be called since this is a background thread.
+    atexit.register(adapter.stop_scan)
+    print('Searching for UART devices...')
+    print('Press Ctrl-C to quit (will take ~30 seconds on OSX).')
+    # Enter a loop and print out whenever a new UART device is found.
+    known_uarts = set()
+    while True:
+        # Call UART.find_devices to get a list of any UART devices that
+        # have been found.  This call will quickly return results and does
+        # not wait for devices to appear.
+        found = set(UART.find_devices())
+        # Check for new devices that haven't been seen yet and print out
+        # their name and ID (MAC address on Linux, GUID on OSX).
+        new = found - known_uarts
+        for device in new:
+            print('Found UART: {0} [{1}]'.format(device.name, device.id))
+        known_uarts.update(new)
+        # Sleep for a second and see if new devices have appeared.
+        time.sleep(1.0)
 
 
 # Initialize the BLE system.  MUST be called before other BLE calls!
