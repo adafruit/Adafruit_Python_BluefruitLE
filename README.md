@@ -2,7 +2,7 @@
 
 Python library to simplify access to Bluefruit LE (Bluetooth low energy) devices and services on Linux and Mac OSX.  Hides all the platform-specific BLE code (using BlueZ on Linux and CoreBluetooth on Mac OSX) and provides a simpler syncronous BLE API which is great for scripts and other automated tasks using BLE.  For example you can create a program to read and write data (like sensor readings) with a Bluefruit LE device in UART mode.
 
-See more details from the guide here: https://learn.adafruit.com/bluefruit-le-uart-python-library/overview
+See more details from the guide here: https://learn.adafruit.com/bluefruit-le-python-library/overview
 
 Note this library provides a Python wrapper for BLE **Central Mode**, meaning it can initiate connections and data exchanges with other BLE Peripherals.  It does not allow you to emulate a BLE Peripheral via Python, or provide Python-based access to BLE peripherals connected to your system.
 
