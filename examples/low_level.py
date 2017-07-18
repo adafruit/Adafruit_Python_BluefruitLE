@@ -80,7 +80,7 @@ def main():
 
         # Function to receive RX characteristic changes.  Note that this will
         # be called on a different thread so be careful to make sure state that
-        # the function changes is thread safe.  Use Queue or other thread-safe
+        # the function changes is thread safe.  Use queue or other thread-safe
         # primitives to send data to other threads.
         def received(data):
             print('Received: {0}'.format(data))

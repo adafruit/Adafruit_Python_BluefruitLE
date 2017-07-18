@@ -9,4 +9,5 @@ setup(name              = 'Adafruit_BluefruitLE',
       description       = 'Python library for interacting with Bluefruit LE (Bluetooth low energy) devices on Linux or OSX.',
       license           = 'MIT',
       url               = 'https://github.com/adafruit/Adafruit_Python_BluefruitLE/',
+      install_requires  = ['future',],
       packages          = find_packages())

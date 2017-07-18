@@ -21,7 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import Queue
+import queue
 import uuid
 
 from .servicebase import ServiceBase
@@ -49,7 +49,7 @@ class UART(ServiceBase):
         self._rx = self._uart.find_characteristic(RX_CHAR_UUID)
         # Use a queue to pass data received from the RX property change back to
         # the main thread in a thread-safe way.
-        self._queue = Queue.Queue()
+        self._queue = queue.Queue()
         # Subscribe to RX characteristic changes to receive data.
         self._rx.start_notify(self._rx_received)
 
@@ -72,6 +72,6 @@ class UART(ServiceBase):
         """
         try:
             return self._queue.get(timeout=timeout_sec)
-        except Queue.Empty:
+        except queue.Empty:
             # Timeout exceeded, return None to signify no data received.
             return None
