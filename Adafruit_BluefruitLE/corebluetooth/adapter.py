@@ -36,7 +36,7 @@ from ..platform import get_provider
 objc.loadBundleFunctions(
     objc.loadBundle("IOBluetooth", globals(), bundle_path=objc.pathForFramework(u'/System/Library/Frameworks/IOBluetooth.framework')),
     globals(),
-    [('IOBluetoothPreferenceGetControllerPowerState', 'oI'),('IOBluetoothPreferenceSetControllerPowerState','vI')]
+    [('IOBluetoothPreferenceGetControllerPowerState', b'oI'),('IOBluetoothPreferenceSetControllerPowerState', b'vI')]
 )
 
 logger = logging.getLogger(__name__)
