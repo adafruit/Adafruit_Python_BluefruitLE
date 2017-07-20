@@ -23,6 +23,7 @@
 from future.utils import raise_
 import logging
 import os
+from past.builtins import map
 import sys
 import subprocess
 import threading
