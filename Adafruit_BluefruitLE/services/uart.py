@@ -45,8 +45,12 @@ class UART(ServiceBase):
         """Initialize UART from provided bluez device."""
         # Find the UART service and characteristics associated with the device.
         self._uart = device.find_service(UART_SERVICE_UUID)
+        if self._uart is None:
+            raise RuntimeError('Failed to find expected UART service!')
         self._tx = self._uart.find_characteristic(TX_CHAR_UUID)
         self._rx = self._uart.find_characteristic(RX_CHAR_UUID)
+        if self._tx is None or self._rx is None:
+            raise RuntimeError('Failed to find expected UART RX and TX characteristics!')
         # Use a queue to pass data received from the RX property change back to
         # the main thread in a thread-safe way.
         self._queue = queue.Queue()

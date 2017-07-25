@@ -21,7 +21,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from collections import Counter
 from past.builtins import map
 import threading
 import time
@@ -98,18 +97,18 @@ class BluezDevice(Device):
         discovering the services and characteristics then an exception is thrown.
         """
         # Turn expected values into a counter of each UUID for fast comparison.
-        expected_services = Counter(service_uuids)
-        expected_chars = Counter(char_uuids)
+        expected_services = set(service_uuids)
+        expected_chars = set(char_uuids)
         # Loop trying to find the expected services for the device.
         start = time.time()
         while True:
             # Find actual services discovered for the device.
-            actual_services = Counter(self.advertised)
+            actual_services = set(self.advertised)
             # Find actual characteristics discovered for the device.
             chars = map(BluezGattCharacteristic,
                         get_provider()._get_objects(_CHARACTERISTIC_INTERFACE,
                                                     self._device.object_path))
-            actual_chars = Counter(map(lambda x: x.uuid, chars))
+            actual_chars = set(map(lambda x: x.uuid, chars))
             # Compare actual discovered UUIDs with expected and return true if at
             # least the expected UUIDs are available.
             if actual_services >= expected_services and actual_chars >= expected_chars:
