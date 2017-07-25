@@ -20,8 +20,10 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from future.utils import raise_
 import logging
 import os
+from past.builtins import map
 import sys
 import subprocess
 import threading
@@ -287,7 +289,7 @@ class CoreBluetoothProvider(Provider):
         """
         # Rethrow exception with its original stack trace following advice from:
         # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
-        raise exec_info[1], None, exec_info[2]
+        raise_(exec_info[1], exec_info[2])
 
     def list_adapters(self):
         """Return a list of BLE adapter objects connected to the system."""

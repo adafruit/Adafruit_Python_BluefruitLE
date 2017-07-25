@@ -33,7 +33,7 @@ def get_provider():
     global _provider
     # Set the provider based on the current platform.
     if _provider is None:
-        if sys.platform == 'linux2':
+        if sys.platform.startswith('linux'):
             # Linux platform
             from .bluez_dbus.provider import BluezProvider
             _provider = BluezProvider()

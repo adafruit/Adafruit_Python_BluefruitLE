@@ -1,1 +1,1 @@
-from platform import get_provider
+from .platform import get_provider

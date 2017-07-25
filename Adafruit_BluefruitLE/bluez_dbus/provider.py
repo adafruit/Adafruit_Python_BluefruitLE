@@ -21,13 +21,15 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from collections import Counter
+from past.builtins import map
 import sys
 import threading
 import time
 
 import dbus
 import dbus.mainloop.glib
+from future.utils import raise_
+from future.utils import iteritems
 from gi.repository import GObject
 
 from ..interfaces import Provider
@@ -100,7 +102,7 @@ class BluezProvider(Provider):
         if self._exception is not None:
             # Rethrow exception with its original stack trace following advice from:
             # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
-            raise self._exception[1], None, self._exception[2]
+            raise_(self._exception[1], None, self._exception[2])
         else:
             sys.exit(self._return_code)
 
@@ -148,12 +150,12 @@ class BluezProvider(Provider):
         service UUIDs.  The default is an empty list which means all devices
         are disconnected.
         """
-        service_uuids = Counter(service_uuids)
+        service_uuids = set(service_uuids)
         for device in self.list_devices():
             # Skip devices that aren't connected.
             if not device.is_connected:
                 continue
-            device_uuids = Counter(map(lambda x: x.uuid, device.list_services()))
+            device_uuids = set(map(lambda x: x.uuid, device.list_services()))
             if device_uuids >= service_uuids:
                 # Found a device that has at least the requested services, now
                 # disconnect from it.
@@ -176,7 +178,7 @@ class BluezProvider(Provider):
         # any that implement the requested interface under the specified path.
         parent_path = parent_path.lower()
         objects = []
-        for opath, interfaces in self._bluez.GetManagedObjects().iteritems():
+        for opath, interfaces in iteritems(self._bluez.GetManagedObjects()):
             if interface in interfaces.keys() and opath.lower().startswith(parent_path):
                 objects.append(self._bus.get_object('org.bluez', opath))
         return objects
