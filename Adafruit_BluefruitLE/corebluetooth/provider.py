@@ -81,7 +81,7 @@ class CentralDelegate(object):
 
     def centralManager_didDiscoverPeripheral_advertisementData_RSSI_(self, manager, peripheral, data, rssi):
         """Called when the BLE adapter found a device while scanning, or has
-        updated advertisement data for a device.
+        new advertisement data for a device.
         """
         logger.debug('centralManager_didDiscoverPeripheral_advertisementData_RSSI called')
         # Log name of device found while scanning.
