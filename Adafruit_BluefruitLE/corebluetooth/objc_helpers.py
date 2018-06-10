@@ -21,6 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import uuid
+from binascii import hexlify
 
 import objc
 
@@ -33,15 +34,10 @@ objc.loadBundle("CoreBluetooth", globals(),
 def cbuuid_to_uuid(cbuuid):
     """Convert Objective-C CBUUID type to native Python UUID type."""
     data = cbuuid.data().bytes()
-    if len(data) == 2:
-        # Short 16-bit UUID
-        return uuid.UUID(bytes='\x00\x00{0}{1}\x00\x00\x10\x00\x80\x00\x00\x80\x5F\x9B\x34\xFB'.format(data[0], data[1]))
-    elif len(data) == 4:
-        # Short 32-bit UUID
-        return uuid.UUID(bytes='{0}{1}{2}{3}\x00\x00\x10\x00\x80\x00\x00\x80\x5F\x9B\x34\xFB'.format(data[0], data[1], data[2], data[3]))
-    else:
-        # Full 128-bit UUID
-        return uuid.UUID(bytes=data)
+
+    template = '{:0>8}-0000-1000-8000-00805f9b34fb' if len(data) <= 4 else '{:0>32}'
+    value = template.format(hexlify(data.tobytes()[:16]).decode('ascii'))
+    return uuid.UUID(hex=value)
 
 
 def uuid_to_cbuuid(uuid):

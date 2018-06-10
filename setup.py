@@ -1,4 +1,10 @@
 from setuptools import setup, find_packages
+import platform
+
+platform_install_requires = []
+
+if platform.system() == 'Darwin':
+    platform_install_requires += ['pyobjc-framework-CoreBluetooth']
 
 # To use a consistent encoding
 from codecs import open
@@ -18,5 +24,5 @@ setup(name              = 'Adafruit_BluefruitLE',
       long_description  = long_description,
       license           = 'MIT',
       url               = 'https://github.com/adafruit/Adafruit_Python_BluefruitLE/',
-      install_requires  = ['future',],
+      install_requires  = ['future'] + platform_install_requires,
       packages          = find_packages())
