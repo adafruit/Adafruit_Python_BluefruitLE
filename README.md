@@ -62,6 +62,10 @@ Once the requirements above have been met the library can be installed by runnin
 ```
 sudo python setup.py install
 ```
+or if you are behind a proxy and want the setup to use your environment variables:
+```
+sudo -E python setup.py install
+```
 
 This will install the library so it can be used by any script on your system.
 
