@@ -59,7 +59,7 @@ def main():
         uart = UART(device)
 
         # Write a string to the TX characteristic.
-        uart.write('Hello world!\r\n')
+        uart.write(b'Hello world!\r\n')
         print("Sent 'Hello world!' to the device.")
 
         # Now wait up to one minute to receive data from the device.
