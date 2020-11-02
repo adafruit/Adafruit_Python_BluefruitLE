@@ -1,4 +1,4 @@
-#THIS LIBRARY IS DEPRECATED. USE THIS NEW LIBRARY INSTEAD:
+# THIS LIBRARY IS DEPRECATED. USE THIS NEW LIBRARY INSTEAD:
 https://github.com/adafruit/Adafruit_Blinka_bleio
 
 # Adafruit Python BluefruitLE
