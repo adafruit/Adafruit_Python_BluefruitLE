@@ -1,3 +1,6 @@
+#THIS LIBRARY IS DEPRECATED. USE THIS NEW LIBRARY INSTEAD:
+https://github.com/adafruit/Adafruit_Blinka_bleio
+
 # Adafruit Python BluefruitLE
 
 Python library to simplify access to Bluefruit LE (Bluetooth low energy) devices and services on Linux and Mac OSX.  Hides all the platform-specific BLE code (using BlueZ on Linux and CoreBluetooth on Mac OSX) and provides a simpler syncronous BLE API which is great for scripts and other automated tasks using BLE.  For example you can create a program to read and write data (like sensor readings) with a Bluefruit LE device in UART mode.
